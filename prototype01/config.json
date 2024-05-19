@@ -1,0 +1,23 @@
+{
+	"key" : "value66asa6",
+    "trackNames": [
+        "AI Drums",
+        "AI Bass",
+        "AI Guitar"
+    ],
+    "instruments": [
+        "Drums",
+        "Bass",
+        "Guitar"
+    ],
+    "instrumentsToMidi": {
+        "Drums": "drums",
+        "Bass": "34",
+        "Guitar": "29"
+    },
+    "midiToTrackNames": {
+        "drums": "AI Drums",
+        "34": "AI Bass",
+        "29": "AI Guitar"
+    }
+}
