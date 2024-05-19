@@ -4,11 +4,6 @@ outlets = 1;
 
 function postCommand(command) {
 
-    //outlet(0, "postCommandResponse", command, {"text": "Hello, Max! Well done!"});
-    //propagateResults(command, {"text": "Hello, Max! Well done!"});
-    //return;
-
-
     var url = "http://127.0.0.1:5885/api/command";
 
     var xhr = new XMLHttpRequest();
@@ -20,8 +15,13 @@ function postCommand(command) {
         if (xhr.readyState == 4) {
             //Print the response to the Max console
             //post("Response: ", xhr.responseText, "\n");
-            var responseJSON = JSON.parse(xhr.responseText);
-            propagateResults(command, responseJSON);
+            try {
+                var responseJSON = JSON.parse(xhr.responseText);
+                propagateResults(command, responseJSON);
+            }
+            catch (e) {
+                post("Error parsing JSON response: ", e, "\n Response text:" + xhr.responseText + "\n");
+            }
         }
     }
     xhr.send(JSON.stringify(command));

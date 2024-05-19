@@ -1,62 +1,111 @@
 autowatch = 1;
-inlets = 1;
+inlets = 2;
 outlets = 1;
+
+// Load the config.
+config = getConfig();
 
 // This is the entry point for the script.
 function bang() {
+	executeCommand("addinstrument");
+}
 
 
+// Execute the command.
+function executeCommand(commandName) {
+	post("[compose.js] Executing command: " + commandName + "\n");
+	if (commandName == "addinstrument") {
+		executeAddInstrumentCommand();
+	}
+	else if (commandName == "clearall") {
+		executeClearAllCommand();
+	}
+	else if (commandName == "cleartrack") {
+		executeClearTrackCommand();
+	}
+	else {
+		post("Unknown command: " + commandName + "\n");
+	}
+}
+
+
+function executeAddInstrumentCommand() {
+
+	// Get the selected instrument MIDI.
 	var instrument = getSelectedInstrumentMidi();
 	post("[compose.js] Selected instrument MIDI: " + instrument + "\n");
 
-	var songData = {
-        "tracks": [],
-    }
+	// Get the instruments that are not the selected one.
+	var allInstruments = config["midiInstruments"];
+	var allInstrumentsWithoutSelected = allInstruments.filter(function(value, index, arr) {
+		return value != instrument;
+	});
+	post("[compose.js] All instruments without selected: " + allInstrumentsWithoutSelected + "\n");
 
-    var parameters = {
-        "instrument": instrument,
-        "genre": "BLACKMETAL",
-        "density": 4,
-        "temperature": 0.8,
-        "harmonymode": "polyphone",
-        "instrumentmode": "full",
-        "selectednotes": ["C", "C#/Db", "D", "D#/Eb", "E", "F", "F#/Gb", "G", "G#/Ab", "A", "A#/Bb", "B"],
+	// Get the song data for the other MIDI instruments.
+	var songData = getSongDataForMidiInstruments(allInstrumentsWithoutSelected);
+	//post("[compose.js] Song data: " + JSON.stringify(songData) + "\n");
+
+	// Create the command parameters.
+	var parameters = {
+		"instrument": instrument,
+		"genre": "BLACKMETAL",
+		"density": 4,
+		"temperature": 0.8,
+		"harmonymode": "polyphone",
+		"instrumentmode": "full",
+		"selectednotes": ["C", "C#/Db", "D", "D#/Eb", "E", "F", "F#/Gb", "G", "G#/Ab", "A", "A#/Bb", "B"],
 		"synthesize": false,
-    }
-
-    var command = {
-        "command": "addinstrument",
-        "data": songData,
-        "parameters": parameters
-    };
-	
-	outlet(0, "postCommand", command);
-
-	return;
-
-
-	// Print the keys and values of the config object
-	for (var key in config) {
-		post(key + ": " + config[key] + "\n");
 	}
 
-	var data = {};
+	var command = {
+		"command": "addinstrument",
+		"data": songData,
+		"parameters": parameters
+	};
 
-	for (var index = 0; index < config.trackNames.length; index++) {
+	outlet(0, "postCommand", command);
+}
 
-		// Get the track name and index.
-		var trackName = config.trackNames[index];
-		var trackIndex = getTrackIndexWithName(trackName);
-		post(trackName + " " + trackIndex + "\n");
 
-		// Get the arrangement clips of that track.
-		var clipIndices = getArrangementClipIndices(trackIndex);
+function executeClearAllCommand() {
 
-		// Sort the arrangement clips.
-		clipIndices = sortClipIndicesByPosition(trackIndex, clipIndices);
-		
-		post("Clips: " + clipIndices + "\n");
+	// For each track, get the clips and delete them.
+	var trackNames = config["trackNames"];
+	for (var i = 0; i < trackNames.length; i++) {
+		executeClearTrackCommand(trackNames[i]);
+	}
 
+}
+
+
+function executeClearTrackCommand(trackName) {
+
+	if (trackName == null) {
+		var selectedInstrument = this.patcher.getnamed("selectedInstrument").getvalueof();
+		var selectedInstrumentName = config["instruments"][selectedInstrument];
+		var selectedInstrumentMidi = config["instrumentsToMidi"][selectedInstrumentName];
+		trackName = config["midiToTrackNames"][selectedInstrumentMidi];
+	}
+	post("[compose.js] Clearing track: " + trackName + "\n");
+
+	// Get the track index.
+	var trackIndex = getTrackIndexWithName(trackName);
+	if (trackIndex == -1) {
+		post("Track not found: " + trackName + "\n");
+		return;
+	}
+
+	// Get the clips of the track.
+	var clipIndices = getArrangementClipIndices(trackIndex);
+	clipIndices = sortClipIndicesByPosition(trackIndex, clipIndices);
+	post("Clips: " + clipIndices + "\n");
+
+	// Delete all notes from the clips.
+	for (var i = 0; i < clipIndices.length; i++) {
+		var clipIndex = clipIndices[i];
+		var clip = new LiveAPI("live_set tracks " + trackIndex + " arrangement_clips " + clipIndex);
+		clip.call("remove_notes_extended", 0, 128, 0, 128);
 	}
 
 }
@@ -64,19 +113,89 @@ function bang() {
 
 function getSelectedInstrumentMidi() {
 
-	var config = getConfig();
+	//var config = getConfig();
 	var instruments = config["instruments"];
 	var instrumentsToMidi = config["instrumentsToMidi"];
-	post("[compose.js] Instruments to MIDI: " + instrumentsToMidi + "\n");
 
 	// Read the dropdown "selectedInstrument" from the Max patch.
     var selectedInstrument = this.patcher.getnamed("selectedInstrument").getvalueof();
-	post("[compose.js] Selected instrument: " + selectedInstrument + "\n");
     var selectedInstrumentName = instruments[selectedInstrument];
-    post("[compose.js] Selected instrument name: " + selectedInstrumentName + "\n");
     var selectedInstrumentMidi = instrumentsToMidi[selectedInstrumentName];
-    post("[compose.js] Selected instrument MIDI: " + selectedInstrumentMidi + "\n");
 	return selectedInstrumentMidi;
+}
+
+function getSongDataForMidiInstruments(midiInstruments) {
+	
+	var songData = {
+		"tracks": []
+	}
+
+	for (var i = 0; i < midiInstruments.length; i++) {
+		var midiInstrument = midiInstruments[i];
+		var trackData = getTrackDataForMidiInstrument(midiInstrument);
+		var isEmpty = false;
+		for (var j = 0; j < trackData["bars"].length; j++) {
+			if (trackData["bars"][j]["notes"].length == 0) {
+				isEmpty = true;
+				break;
+			}
+		}
+		if (!isEmpty) {
+			songData["tracks"].push(trackData);
+		}
+		else {
+			post("[compose.js] Track is empty: " + midiInstrument + "\n");
+		}
+	}
+
+	return songData;
+
+}
+
+function getTrackDataForMidiInstrument(midiInstrument) {
+
+	// Get the track index.
+	var trackName = config["midiToTrackNames"][midiInstrument];
+	post("[compose.js] Track name: " + trackName + "\n");
+	var trackIndex = getTrackIndexWithName(trackName);
+	post("[compose.js] Track index: " + trackIndex + "\n");
+
+	// Get the clips of the track.
+	var clipIndices = getArrangementClipIndices(trackIndex);
+	clipIndices = sortClipIndicesByPosition(trackIndex, clipIndices);
+	post("[compose.js] Clips: " + clipIndices + "\n");
+
+	// Get the track.
+	var trackData = {
+		"instrument": midiInstrument,
+		"bars": [],
+		"enabled": true
+	};
+
+	// Iterate through the clips and get the bars.
+	for (var i = 0; i < 4; i++) {
+		var clipIndex = clipIndices[i];
+		var barData = getBarDataFromClip(trackIndex, clipIndex);
+		trackData["bars"].push(barData);
+	}
+
+	// Done.
+	return trackData;
+}
+
+
+function getBarDataFromClip(trackIndex, clipIndex) {
+	
+	// Get the clip.
+	var clip = new LiveAPI("live_set tracks " + trackIndex + " arrangement_clips " + clipIndex);
+
+	// Get the notes from the clip.
+	var notes = clip.call("get_notes_extended", 0, 128, 0, 128);
+	notes = JSON.parse(notes);
+	post("[compose.js] Notes: " + notes + " " + typeof notes +  "\n");
+
+	var barData = notesToBarData(notes);
+	return barData;
 }
 
 
@@ -125,15 +244,11 @@ function postCommandResponse(result) {
 function handleAddInstrumentResult(result) {
 	post("[compose.js] Handling addinstrument result.\n");
 
+	// Get the config object.
 	var config = getConfig();
 
-	//post(JSON.stringify(result) + "\n");
-
-	// Get the track data from the result object.
+	// Get the track data from the result object. It is the last one.
 	var songData = result["result"]["song_data"];
-	//post("Song data: " + JSON.stringify(songData) + "\n");
-	
-	// Get the last track.
 	var tracks = songData["tracks"];
 	var track = tracks[tracks.length - 1];
 	//post(JSON.stringify(track) + "\n");
@@ -148,26 +263,24 @@ function handleAddInstrumentResult(result) {
 	var trackName = config["midiToTrackNames"][instrument];
 	post("Track name: " + trackName + "\n");
 
+	// Get the clips of the track.
+	var trackIndex = getTrackIndexWithName(trackName);
+	if (trackIndex == -1) {
+		post("Track not found: " + trackName + "\n");
+		return;
+	}
+	post("Track index: " + trackIndex + "\n");
+	var clipIndices = getArrangementClipIndices(trackIndex);
+	clipIndices = sortClipIndicesByPosition(trackIndex, clipIndices);
+	post("Clips: " + clipIndices + "\n");
+
+	// Insert the bars into the clips.
+	for (var i = 0; i < 4; i++) {
+		var barData = bars[i];
+		var clipIndex = clipIndices[i];
+		insertBarIntoClip(barData, trackIndex, clipIndex);
+	}
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-// THIS IS SOME OLD STUFF THAT MIGHT BE USEFUL LATER
-
-
-
-
-
 
 
 function getTrackIndexWithName(name) {
@@ -202,4 +315,101 @@ function sortClipIndicesByPosition(trackIndex, clipIndices) {
 		return clipA.get("position") - clipB.get("position");
 	});
 	return clipIndices;
+}
+
+
+function insertBarIntoClip(barData, trackIndex, clipIndex) {
+	post("Inserting bar into track " + trackIndex + " clip " + clipIndex + "\n");
+
+	// Get the clip.
+	var clip = new LiveAPI("live_set tracks " + trackIndex + " arrangement_clips " + clipIndex);
+
+	// Convert the track data to notes.
+	var notes = barDataToNotes(barData);
+	post("Notes: ", notes, "\n");
+
+	// Delete all notes and add the new notes.
+	clip.call("remove_notes_extended", 0, 128, 0, 128);
+	clip.call("add_new_notes", notes);
+
+}	
+
+function barDataToNotes(barData) {
+
+	// Get the BPM.
+	var bpm = getBpm();
+
+	// Create the notes object.
+	var notes = {
+		"notes": []
+	}
+
+	// The track data has a "notes" array. Iterate through the notes and add the notes to the notes object.
+	for (var i = 0; i < barData["notes"].length; i++) {
+		var noteData = barData["notes"][i];
+		var noteStart = noteData["start"];
+		var noteEnd = noteData["end"];
+		var notePitch = noteData["note"];
+		var noteVelocity = 80;
+
+		// Convert the note start and end times to seconds.
+		noteStart = convertTimeToSeconds(noteStart, bpm);
+		noteEnd = convertTimeToSeconds(noteEnd, bpm);
+
+		// Add the note to the notes object.
+		var note = {
+			"pitch": notePitch,
+			"start_time": noteStart,
+			"duration": noteEnd - noteStart,
+			"velocity": noteVelocity,
+			"mute": 0
+		}
+		notes["notes"].push(note);
+	}
+
+	return notes;
+}
+
+function notesToBarData(notes) {
+
+	// Get the BPM.
+	var bpm = getBpm();
+
+	var barData = {
+		"notes": []
+	}
+
+	for (var i = 0; i < notes["notes"].length; i++) {
+		var note = notes["notes"][i];
+		var noteData = {
+			"start": convertTimeToBeats(note["start_time"], bpm),
+			"end": convertTimeToBeats(note["start_time"] + note["duration"], bpm),
+			"note": note["pitch"]
+		}
+		barData["notes"].push(noteData);
+	}
+
+	return barData;
+
+}
+
+
+function getBpm() {
+	// Get the beats per minute. From the LiveAPI.
+	var api = new LiveAPI("live_set");
+	var bpm = api.get("tempo");
+	return bpm;
+}
+
+
+function convertTimeToSeconds(timeInBeats, bpm) {
+    // Time in beats is in 32nd notes resolution.
+    return timeInBeats * (60 / bpm) / 4;
+}
+
+
+function convertTimeToBeats(timeInSeconds, bpm) {
+	// Round to the nearest 32nd note.
+	var beats = timeInSeconds * 4 / (60 / bpm);
+	return Math.round(beats * 32) / 32;
 }

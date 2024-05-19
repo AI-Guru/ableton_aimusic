@@ -19,5 +19,10 @@
         "drums": "AI Drums",
         "34": "AI Bass",
         "29": "AI Guitar"
-    }
+    },
+    "midiInstruments": [
+        "drums",
+        "34",
+        "29"
+    ]
 }
