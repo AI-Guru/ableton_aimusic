@@ -47,6 +47,7 @@ function executeAddInstrumentCommand() {
 
 	// Get the selected genre.
 	var genre = getSelectedGenre();
+	post("[compose.js] Selected genre: " + genre + "\n");
 
 	// Get the temperature.
 	var temperature = getTemperature();
@@ -149,7 +150,7 @@ function getSelectedGenre() {
 
 	// Get and return the selected genre.
 	var selectedGenreIndex = selectedGenreSlider.getvalueof();
-	var selectedGenre = genreItems[selectedGenreIndex];
+	var selectedGenre = genreItems[selectedGenreIndex * 2];
 	return selectedGenre;
 }
 
@@ -368,13 +369,12 @@ function insertBarIntoClip(barData, trackIndex, clipIndex) {
 
 	// Convert the track data to notes.
 	var notes = barDataToNotes(barData);
-	post("Notes: ", notes, "\n");
 
 	// Delete all notes and add the new notes.
 	clip.call("remove_notes_extended", 0, 128, 0, 128);
 	clip.call("add_new_notes", notes);
-
 }	
+
 
 function barDataToNotes(barData) {
 
