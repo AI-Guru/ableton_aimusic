@@ -7,6 +7,16 @@ config = getConfig();
 
 // This is the entry point for the script.
 function bang() {
+	//var selectedGenre = getSelectedGenre();
+	//post("[compose.js] Selected genre: " + selectedGenre + "\n");
+
+	//var selectedInstrument = getSelectedInstrumentMidi();
+	//post("[compose.js] Selected instrument: " + selectedInstrument + "\n");
+
+	//var temperature = getTemperature();
+	//post("[compose.js] Temperature: " + temperature + "\n");
+
+	// Relay the command.
 	executeCommand("addinstrument");
 }
 
@@ -35,6 +45,12 @@ function executeAddInstrumentCommand() {
 	var instrument = getSelectedInstrumentMidi();
 	post("[compose.js] Selected instrument MIDI: " + instrument + "\n");
 
+	// Get the selected genre.
+	var genre = getSelectedGenre();
+
+	// Get the temperature.
+	var temperature = getTemperature();
+
 	// Get the instruments that are not the selected one.
 	var allInstruments = config["midiInstruments"];
 	var allInstrumentsWithoutSelected = allInstruments.filter(function(value, index, arr) {
@@ -49,9 +65,9 @@ function executeAddInstrumentCommand() {
 	// Create the command parameters.
 	var parameters = {
 		"instrument": instrument,
-		"genre": "BLACKMETAL",
+		"genre": genre,
 		"density": 4,
-		"temperature": 0.8,
+		"temperature": temperature,
 		"harmonymode": "polyphone",
 		"instrumentmode": "full",
 		"selectednotes": ["C", "C#/Db", "D", "D#/Eb", "E", "F", "F#/Gb", "G", "G#/Ab", "A", "A#/Bb", "B"],
@@ -113,7 +129,6 @@ function executeClearTrackCommand(trackName) {
 
 function getSelectedInstrumentMidi() {
 
-	//var config = getConfig();
 	var instruments = config["instruments"];
 	var instrumentsToMidi = config["instrumentsToMidi"];
 
@@ -123,6 +138,33 @@ function getSelectedInstrumentMidi() {
     var selectedInstrumentMidi = instrumentsToMidi[selectedInstrumentName];
 	return selectedInstrumentMidi;
 }
+
+
+function getSelectedGenre() {
+	// SelectedGenre is a umenu.
+	var selectedGenreSlider = this.patcher.getnamed("selectedGenre");
+
+	// Get the genre name from the config.
+	var genreItems = selectedGenreSlider.getattr("items")
+
+	// Get and return the selected genre.
+	var selectedGenreIndex = selectedGenreSlider.getvalueof();
+	var selectedGenre = genreItems[selectedGenreIndex];
+	return selectedGenre;
+}
+
+
+function getTemperature() {
+
+	// Object is temperatureSlider.
+	var temperatureSlider = this.patcher.getnamed("temperatureSlider");
+
+	// Get the value of the slider.
+	var temperature = temperatureSlider.getvalueof();
+
+	return parseFloat(temperature);
+}
+
 
 function getSongDataForMidiInstruments(midiInstruments) {
 	
