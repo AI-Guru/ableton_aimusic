@@ -15,6 +15,54 @@ function bang() {
     post("loopStartBars: ", loopStatusBars.loopStartBars, "\n");
     post("loopLengthBars: ", loopStatusBars.loopLengthBars, "\n");
 
+    // Get the selected track.
+    var selectedTrack = new LiveAPI("live_set view selected_track");
+    var selectedTrackId = selectedTrack.id;
+    var selectedTrackIndex = -1;
+    var liveSet = new LiveAPI("live_set");
+	var numTracks = liveSet.getcount("tracks");
+	for (var i = 0; i < numTracks; i++) {
+		var track = new LiveAPI("live_set tracks " + i);
+		if (track.id == selectedTrackId) {
+			selectedTrackIndex = i;
+            break;
+		}
+	}
+    if (selectedTrackIndex == -1) {
+        throw "Selected track not found in tracks.";
+    }
+    post("selectedTrackId: ", selectedTrackId, "\n");
+    post("selectedTrackIndex: ", selectedTrackIndex, "\n");
+
+
+    // Get the arrangement clips of that track.
+    var arrangementClips = new LiveAPI("live_set tracks " + selectedTrackIndex);
+    var numArrangementClips = arrangementClips.getcount("arrangement_clips");
+    post("numArrangementClips: ", numArrangementClips, "\n");
+
+    // Get the individual bar notes.
+    notes = [];
+    var startBeats = loopStatusBeats.loopStartBeats
+    var endBeats = loopStatusBeats.loopStartBeats + loopStatusBeats.loopLengthBeats;
+    post("startBeats: ", startBeats, " endBeats: ", endBeats, "\n");
+    for (var startIndex = startBeats; startIndex < endBeats; startIndex+=4) {
+        post("startIndex: ", startIndex, " endIndex: ", startIndex + 4, "\n");
+        for (var i = 0; i < numArrangementClips; i++) {
+            var clip = new LiveAPI("live_set tracks " + selectedTrackIndex + " arrangement_clips " + i);
+            var notes = clip.call("get_notes_extended", 0, 128, startIndex, 4);
+            notes = JSON.parse(notes)["notes"];
+            post("notes: ", notes, " ", typeof notes, "\n");
+        }
+    }
+
+
+
+    return;
+
+    
+
+
+
     // Get all the arrangement tracks that are in the loop.
     var clipsInLoop = getClipsInRange(loopStatusBars.loopStartBars, loopStatusBars.loopStartBars + loopStatusBars.loopLengthBars);
 
@@ -56,8 +104,8 @@ function getLoopInfoBeats() {
     var loopLengthBeats = liveSet.get("loop_length");
     return {
         loopActive: loopActive,
-        loopStartBeats: loopStartBeats,
-        loopLengthBeats: loopLengthBeats
+        loopStartBeats: parseInt(loopStartBeats),
+        loopLengthBeats: parseInt(loopLengthBeats)
     };
 }
 
