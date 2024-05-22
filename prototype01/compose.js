@@ -7,15 +7,6 @@ config = getConfig();
 
 // This is the entry point for the script.
 function bang() {
-	//var selectedGenre = getSelectedGenre();
-	//post("[compose.js] Selected genre: " + selectedGenre + "\n");
-
-	//var selectedInstrument = getSelectedInstrumentMidi();
-	//post("[compose.js] Selected instrument: " + selectedInstrument + "\n");
-
-	//var temperature = getTemperature();
-	//post("[compose.js] Temperature: " + temperature + "\n");
-
 	// Relay the command.
 	executeCommand("addinstrument");
 }
@@ -41,8 +32,39 @@ function executeCommand(commandName) {
 
 function executeAddInstrumentCommand() {
 
+	// Get all the AI tracks.
+	var aiTracksIndices = getAiTracksIndices();
+	if (aiTracksIndices.length == 0) {
+		logMessage("No AI tracks found.");
+		return;
+	}
+
+	// Get the index of the selected AI track.
+	var selectedTrackIndices = getSelectedAiTrackIndices();
+	if (selectedTrackIndices.length == 0) {
+		logMessage("No AI tracks selected.");
+		return;
+	}
+	if (selectedTrackIndices.length > 1) {
+		logMessage("More than one AI track selected.");
+		return;
+	}
+
+	// Get the AI tracks that are not selected.
+	var aiTracksNotSelected = aiTracksIndices.filter(function(value, index, arr) {
+		return selectedTrackIndices.indexOf(value) == -1;
+	});
+
+	post("[compose.js] Selected AI track index: " + selectedTrackIndices[0] + " all: " + aiTracksIndices + "\n");
+	post("[compose.js] AI tracks not selected: " + aiTracksNotSelected + "\n");
+
+	// Only use the first AI track.
+	var trackIndex = selectedTrackIndices[0];
+	var trackName = new LiveAPI("live_set tracks " + trackIndex).get("name").toString();
+	post("[compose.js] Selected track name: " + trackName + "\n");
+
 	// Get the selected instrument MIDI.
-	var instrument = getSelectedInstrumentMidi();
+	var instrument = getInstrumentFromTrackName(trackName);
 	post("[compose.js] Selected instrument MIDI: " + instrument + "\n");
 
 	// Get the selected genre.
@@ -51,17 +73,10 @@ function executeAddInstrumentCommand() {
 
 	// Get the temperature.
 	var temperature = getTemperature();
+	post("[compose.js] Temperature: " + temperature + "\n");
 
-	// Get the instruments that are not the selected one.
-	var allInstruments = config["midiInstruments"];
-	var allInstrumentsWithoutSelected = allInstruments.filter(function(value, index, arr) {
-		return value != instrument;
-	});
-	post("[compose.js] All instruments without selected: " + allInstrumentsWithoutSelected + "\n");
-
-	// Get the song data for the other MIDI instruments.
-	var songData = getSongDataForMidiInstruments(allInstrumentsWithoutSelected);
-	//post("[compose.js] Song data: " + JSON.stringify(songData) + "\n");
+	// Get the song data for the other instruments.
+	var songData = getSongDataFromTrackIndices(aiTracksNotSelected);
 
 	// Create the command parameters.
 	var parameters = {
@@ -81,7 +96,97 @@ function executeAddInstrumentCommand() {
 		"parameters": parameters
 	};
 
-	outlet(0, "postCommand", command);
+	var arguments = {
+		"trackIndex": trackIndex
+	};
+
+	// Post the command.
+	postCommand(command, arguments);
+
+}
+
+function postCommand(command, callArguments) {
+
+    var url = "http://127.0.0.1:5885/api/command";
+
+    var xhr = new XMLHttpRequest();
+    xhr.open("POST", url, true);
+
+    //Send the proper header information along with the request and add the command as a JSON string payload.
+    xhr.setRequestHeader("Content-Type", "application/json");
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState == 4) {
+			var responseJSON = JSON.parse(xhr.responseText);
+			var result = {
+				"command": command,
+				"arguments": callArguments,
+				"result": responseJSON
+			};
+			postCommandResponse(result);
+        }
+    }.bind(this);
+    xhr.send(JSON.stringify(command));
+
+}
+
+function getAiTracksIndices() {
+
+	// Get the infix to identify AI tracks.
+	var infix = config.aiInstrumentInfix;
+
+	// Get all tracks from the LiveAPI.
+	var liveSet = new LiveAPI("live_set");
+	var numTracks = liveSet.getcount("tracks");
+
+	// Get the AI tracks.
+	var aiTracksIndices = [];
+
+	for (var i = 0; i < numTracks; i++) {
+		var track = new LiveAPI("live_set tracks " + i);
+		var trackName = track.get("name").toString();
+		if (trackName.indexOf(infix) != -1) {
+			aiTracksIndices.push(i);
+		}
+	}
+
+	return aiTracksIndices;
+
+}
+
+function getSelectedAiTrackIndices() {
+
+	// Get the infix to identify AI tracks.
+	var infix = config.aiInstrumentInfix;
+
+	// Get the selected track.
+	var selectedTrack = new LiveAPI("live_set view selected_track");
+	var trackName = selectedTrack.get("name").toString();
+	var trackId = selectedTrack.id;
+
+	// Check if the track is an AI track.
+	if (trackName.indexOf(infix) == -1) {
+		return [];
+	}
+
+	// Get the index of the selected track.
+	var trackIndex = getTrackIndexFromId(trackId);
+	if (trackIndex == -1) {
+		return [];
+	}
+	return [trackIndex];
+}
+
+
+function getTrackIndexFromId(trackId) {
+	var liveSet = new LiveAPI("live_set");
+	var numTracks = liveSet.getcount("tracks");
+	for (var i = 0; i < numTracks; i++) {
+		var track = new LiveAPI("live_set tracks " + i);
+		if (track.id == trackId) {
+			return i;
+		}
+	}
+	return -1;
 }
 
 
@@ -166,16 +271,17 @@ function getTemperature() {
 	return parseFloat(temperature);
 }
 
-
-function getSongDataForMidiInstruments(midiInstruments) {
+function getSongDataFromTrackIndices(trackIndices) {
 	
 	var songData = {
 		"tracks": []
 	}
 
-	for (var i = 0; i < midiInstruments.length; i++) {
-		var midiInstrument = midiInstruments[i];
-		var trackData = getTrackDataForMidiInstrument(midiInstrument);
+	for (var i = 0; i < trackIndices.length; i++) {
+		var trackIndex = trackIndices[i];
+		var trackName = new LiveAPI("live_set tracks " + trackIndex).get("name").toString();
+		var midiInstrument = getInstrumentFromTrackName(trackName);
+		var trackData = getTrackDataForIndex(trackIndex);
 		var isEmpty = false;
 		for (var j = 0; j < trackData["bars"].length; j++) {
 			if (trackData["bars"][j]["notes"].length == 0) {
@@ -192,25 +298,25 @@ function getSongDataForMidiInstruments(midiInstruments) {
 	}
 
 	return songData;
-
 }
 
-function getTrackDataForMidiInstrument(midiInstrument) {
 
-	// Get the track index.
-	var trackName = config["midiToTrackNames"][midiInstrument];
-	post("[compose.js] Track name: " + trackName + "\n");
-	var trackIndex = getTrackIndexWithName(trackName);
-	post("[compose.js] Track index: " + trackIndex + "\n");
+function getTrackDataForIndex(trackIndex) {
+
+	// Get the track.
+	var track = new LiveAPI("live_set tracks " + trackIndex);
+	var trackName = track.get("name").toString();
+
+	// Get the instrument.
+	var instrument = getInstrumentFromTrackName(trackName);
 
 	// Get the clips of the track.
 	var clipIndices = getArrangementClipIndices(trackIndex);
 	clipIndices = sortClipIndicesByPosition(trackIndex, clipIndices);
-	post("[compose.js] Clips: " + clipIndices + "\n");
 
 	// Get the track.
 	var trackData = {
-		"instrument": midiInstrument,
+		"instrument": instrument,
 		"bars": [],
 		"enabled": true
 	};
@@ -224,6 +330,15 @@ function getTrackDataForMidiInstrument(midiInstrument) {
 
 	// Done.
 	return trackData;
+}
+
+
+function getInstrumentFromTrackName(trackName) {
+	var infix = config["aiInstrumentInfix"];
+	var instrument = trackName.split(infix)[1];
+	var instrumentsToMidi = config["instrumentsToMidi"];
+	instrument = instrumentsToMidi[instrument];
+	return instrument;
 }
 
 
@@ -275,7 +390,8 @@ function postCommandResponse(result) {
 	// Get the command name from the result object.
 	var commandName = result.command.command;
 	if (commandName == "addinstrument") {
-		handleAddInstrumentResult(result);
+		var trackIndex = result.arguments.trackIndex;
+		handleAddInstrumentResult(result, trackIndex);
 	}
 	else {
 		post("Unknown command name: " + commandName + "\n");
@@ -283,8 +399,7 @@ function postCommandResponse(result) {
 
 }
 
-
-function handleAddInstrumentResult(result) {
+function handleAddInstrumentResult(result, trackIndex) {
 	post("[compose.js] Handling addinstrument result.\n");
 
 	// Get the config object.
@@ -294,24 +409,12 @@ function handleAddInstrumentResult(result) {
 	var songData = result["result"]["song_data"];
 	var tracks = songData["tracks"];
 	var track = tracks[tracks.length - 1];
-	//post(JSON.stringify(track) + "\n");
 
 	// Get the bars of the track.
 	var bars = track["bars"];
 	post("Bars: " + bars.length + "\n");
 
-	// Get track name.
-	var instrument = track["instrument"];
-	post("Instrument: " + instrument + "\n");
-	var trackName = config["midiToTrackNames"][instrument];
-	post("Track name: " + trackName + "\n");
-
 	// Get the clips of the track.
-	var trackIndex = getTrackIndexWithName(trackName);
-	if (trackIndex == -1) {
-		post("Track not found: " + trackName + "\n");
-		return;
-	}
 	post("Track index: " + trackIndex + "\n");
 	var clipIndices = getArrangementClipIndices(trackIndex);
 	clipIndices = sortClipIndicesByPosition(trackIndex, clipIndices);
@@ -454,4 +557,10 @@ function convertTimeToBeats(timeInSeconds, bpm) {
 	// Round to the nearest 32nd note.
 	var beats = timeInSeconds * 4 / (60 / bpm);
 	return Math.round(beats * 32) / 32;
+}
+
+function logMessage(message) {
+	var messageLog = this.patcher.getnamed("messageLog");
+	messageLog.set(message);
+	post("[compose.js] " + message + "\n");
 }
