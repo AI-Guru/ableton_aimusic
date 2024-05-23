@@ -32,11 +32,11 @@ function executeCommand(commandName) {
 
 function executeAddInstrumentCommand() {
 
-
 	// Get the loop info in beats.
 	var loopInfoBeats = getLoopInfoBeats();
 	var startBeat = loopInfoBeats.loopStartBeats;
-	var lengthBeats = loopInfoBeats.loopLengthBeats;
+	//var lengthBeats = loopInfoBeats.loopLengthBeats;
+	var lengthBeats = 16;
 	post("[compose.js] Loop start beat: " + startBeat + " length beats: " + lengthBeats + "\n");
 
 	// Get all the AI tracks.
@@ -282,16 +282,17 @@ function getTemperature() {
 
 function getSongDataFromTrackIndices(trackIndices, startBeat, lengthBeats) {
 	
+	post("[compose.js] Getting song data from track indices " + trackIndices + " start beat: " + startBeat + " length beats: " + lengthBeats + "\n");
+
 	var songData = {
 		"tracks": []
 	}
 
 	for (var i = 0; i < trackIndices.length; i++) {
-		throw "Not implemented.";
 		var trackIndex = trackIndices[i];
 		var trackName = new LiveAPI("live_set tracks " + trackIndex).get("name").toString();
 		var midiInstrument = getInstrumentFromTrackName(trackName);
-		var trackData = getTrackDataForIndex(trackIndex);
+		var trackData = getTrackDataForIndex(trackIndex, startBeat, lengthBeats);
 		var isEmpty = false;
 		for (var j = 0; j < trackData["bars"].length; j++) {
 			if (trackData["bars"][j]["notes"].length == 0) {
@@ -307,11 +308,14 @@ function getSongDataFromTrackIndices(trackIndices, startBeat, lengthBeats) {
 		}
 	}
 
+	// Print as JSON.
+	post("[compose.js] Song data: " + JSON.stringify(songData) + "\n");
+
 	return songData;
 }
 
 
-function getTrackDataForIndex(trackIndex) {
+function getTrackDataForIndex(trackIndex, startBeat, lengthBeats) {
 
 	// Get the track.
 	var track = new LiveAPI("live_set tracks " + trackIndex);
@@ -319,10 +323,14 @@ function getTrackDataForIndex(trackIndex) {
 
 	// Get the instrument.
 	var instrument = getInstrumentFromTrackName(trackName);
+	post("[compose.js] Track name: " + trackName + " instrument: " + instrument + "\n");
 
 	// Get the clips of the track.
-	var clipIndices = getArrangementClipIndices(trackIndex);
-	clipIndices = sortClipIndicesByPosition(trackIndex, clipIndices);
+	//var clipsInRangeIndices = getArrangementClipsInRangeIndices(trackIndex, startBeat, lengthBeats);
+	
+	//if (clipsInRangeIndices.length != 1) {
+	//	throw "There are no clips in the range.";
+	//}
 
 	// Get the track.
 	var trackData = {
@@ -331,12 +339,66 @@ function getTrackDataForIndex(trackIndex) {
 		"enabled": true
 	};
 
-	// Iterate through the clips and get the bars.
-	for (var i = 0; i < 4; i++) {
-		var clipIndex = clipIndices[i];
-		var barData = getBarDataFromClip(trackIndex, clipIndex);
+	for (var barIndex = 0; barIndex < 4; barIndex++) {
+		post("[compose.js] Getting bar data for track " + trackIndex + " bar " + barIndex + "\n");
+
+
+		// Create empty bar data.
+		var barData = {
+			"notes": []
+		};
+
+		// Get the start beat of the bar.
+		var beatsStart = startBeat + barIndex * 4;
+		var beatsLength = 4;
+
+		// Go through the clips.
+		var clipsNumber = new LiveAPI("live_set tracks " + trackIndex).getcount("arrangement_clips");
+
+		for (var clipIndex = 0; clipIndex < clipsNumber; clipIndex++) {
+			var clip = new LiveAPI("live_set tracks " + trackIndex + " arrangement_clips " + clipIndex);
+			var clipStart = parseInt(clip.get("start_time"));
+
+			// Make beatsStart relative to the clip.
+			var beatsStartRelative = beatsStart - clipStart;
+
+			// Get the notes from the clip.
+			var notes = clip.call("get_notes_extended", 0, 128, beatsStartRelative, beatsLength);
+			notes = JSON.parse(notes);
+
+			// Add the notes to the bar data.
+			var notesArray = notes["notes"];
+			for (var i = 0; i < notesArray.length; i++) {
+				var note = notesArray[i];
+				var start = note["start_time"] - beatsStartRelative;
+				var end = note["start_time"] + note["duration"] - beatsStartRelative;
+				start = start * 8;
+				end = end * 8;
+				var noteData = {
+					"start": start,
+					"end": end,
+					"note": note["pitch"]
+				}
+				barData["notes"].push(noteData);
+			}
+
+
+
+			// Post how many notes were found.
+			post("[compose.js] Notes found: " + notes["notes"].length + "\n");
+		}
+
+		// Add the bar data to the track data.
 		trackData["bars"].push(barData);
 	}
+
+	// Iterate through the clips and get the bars.
+	// TODO Make this work for the range.
+	//for (var i = 0; i < 4; i++) {
+	//	var clipIndex = clipIndices[i];
+	//	var barData = getBarDataFromClip(trackIndex, clipIndex);
+	//	trackData["bars"].push(barData);
+	//}
 
 	// Done.
 	return trackData;
@@ -353,6 +415,7 @@ function getInstrumentFromTrackName(trackName) {
 
 
 function getBarDataFromClip(trackIndex, clipIndex) {
+	throw "I think I can remove this. I might be wrong."
 	
 	// Get the clip.
 	var clip = new LiveAPI("live_set tracks " + trackIndex + " arrangement_clips " + clipIndex);
@@ -427,6 +490,85 @@ function handleAddInstrumentResult(result, trackIndex, startBeat, lengthBeats) {
 	post("Bars: " + bars.length + "\n");
 
 	// Get all arrangement clips.
+	//var clipsInRangeIndices = getArrangementClipsInRangeIndices(trackIndex, startBeat, lengthBeats);
+	//post("Clips in range: " + clipsInRangeIndices.length + "\n");
+	//if (clipsInRangeIndices.length == 0) {
+	//	throw "There must be at least one clip in the range.";
+	//}
+
+	// Get the number of arrangement clips in the track.
+	var numberOfArrangementClipsInTrack = new LiveAPI("live_set tracks " + trackIndex).getcount("arrangement_clips");
+	post("Number of arrangement clips in track: " + numberOfArrangementClipsInTrack + "\n");
+
+	// Go through the bars.
+	var insertionData = [];
+	for (var i = 0; i < bars.length; i++) {
+		var barStartBeats = startBeat + i * 4;
+		var barLengthBeats = 4;
+		post("Bar index: " + i + " start: " + barStartBeats + " length: " + barLengthBeats + "\n");
+		var barData = bars[i];
+		var barPositionInLoopBeats = i * 4 + startBeat;
+		post("Bar position in loop: " + barPositionInLoopBeats + "\n");
+
+		// Find the first clip that intersects with the bar.
+		var inserted = false;
+		for (var clipIndex = 0; clipIndex < numberOfArrangementClipsInTrack; clipIndex++) {
+			var clip = new LiveAPI("live_set tracks " + trackIndex + " arrangement_clips " + clipIndex);
+			var clipStartTime = parseInt(clip.get("start_time"));
+			var clipLength = parseInt(clip.get("length"));
+			if (clipStartTime <= barStartBeats && clipStartTime + clipLength >= barStartBeats + barLengthBeats) {
+				var offsetInClipInBeats = barPositionInLoopBeats - clipStartTime;
+				post("Inserting bar into clip: " + clipIndex + " offset: " + offsetInClipInBeats + "\n");
+				insertionData.push([clipIndex, barData, offsetInClipInBeats]);
+				inserted = true;
+				post("\n");
+				break;
+			}
+		}
+		if (!inserted) {
+			post("No clip found for bar.\n");
+		}
+
+	}
+
+	// Get the clip indices and make them unique.
+	var clipIndices = insertionData.map(function(value, index, arr) {
+		return value[0];
+	});
+	post("Clip indices: " + clipIndices + "\n");
+
+	// Clear the clips.
+	clearClips(trackIndex, clipIndices);
+
+	// Insert the bars into the clips.
+	for (var i = 0; i < insertionData.length; i++) {
+		var data = insertionData[i];
+		var clipIndex = data[0];
+		var barData = data[1];
+		var offsetInClipInBeats = data[2];
+		insertBarIntoClip(barData, trackIndex, clipIndex, offsetInClipInBeats);
+	}
+}
+
+
+function clearClips(trackIndex, clipIndices) {
+	for (var i = 0; i < clipIndices.length; i++) {
+		var clipIndex = clipIndices[i];
+		clearClip(trackIndex, clipIndex);
+	}
+}
+
+
+function clearClip(trackIndex, clipIndex) {
+	var clip = new LiveAPI("live_set tracks " + trackIndex + " arrangement_clips " + clipIndex);
+	clip.call("remove_notes_extended", 0, 128, 0, 128);
+}
+
+
+function getArrangementClipsInRangeIndices(trackIndex, startBeat, lengthBeats) {
+	throw "I think I can remove this. I might be wrong.";
+
+	post("Getting clips in range for track " + trackIndex + " start: " + startBeat + " length: " + lengthBeats + "\n");
 	var track = new LiveAPI("live_set tracks " + trackIndex);
 	var arrangementClipsCount = track.getcount("arrangement_clips");
 	var clipsInRangeIndices = [];
@@ -439,16 +581,8 @@ function handleAddInstrumentResult(result, trackIndex, startBeat, lengthBeats) {
 			clipsInRangeIndices.push(i);
 		}
 	}
-	post("Clips in range: " + clipsInRangeIndices.length + "\n");
-	if (clipsInRangeIndices.length != 1) {
-		throw "There must be exactly one clip in the range. Got: " + clipsInRangeIndices.length;
-	}
-
-	// Insert the bars into the clips.
-	var clipIndex = clipsInRangeIndices[0];
-	insertBarsIntoClip(bars, trackIndex, clipIndex);
+	return clipsInRangeIndices;
 }
-
 
 function getTrackIndexWithName(name) {
 	var liveSet = new LiveAPI("live_set");
@@ -464,6 +598,7 @@ function getTrackIndexWithName(name) {
 
 
 function getArrangementClipIndices(trackIndex) {
+	throw "I think I can remove this. I might be wrong.";
 	var track = new LiveAPI("live_set tracks " + trackIndex);
 	var arrangementClipsCount = track.getcount("arrangement_clips");
 	var arrangementClipsIndices = [];
@@ -475,6 +610,8 @@ function getArrangementClipIndices(trackIndex) {
 
 
 function sortClipIndicesByPosition(trackIndex, clipIndices) {
+	throw "I think I can remove this. I might be wrong.";
+
 	var track = new LiveAPI("live_set tracks " + trackIndex);
 	clipIndices.sort(function(a, b) {
 		var clipA = new LiveAPI("live_set tracks " + trackIndex + " arrangement_clips " + a);
@@ -485,7 +622,31 @@ function sortClipIndicesByPosition(trackIndex, clipIndices) {
 }
 
 
+function insertBarIntoClip(barData, trackIndex, clipIndex, offsetInClipInBeats) {
+	post("Inserting bar into track " + trackIndex + " clip " + clipIndex + " offset: " + offsetInClipInBeats + "\n");
+
+	// Get the clip.
+	var clip = new LiveAPI("live_set tracks " + trackIndex + " arrangement_clips " + clipIndex);
+
+	var barIndex = offsetInClipInBeats / 4;
+	post("Bar index: " + barIndex + "\n");
+
+	// Get the notes from the clip.
+	var notes = barDataToNotes(barIndex, barData);
+
+	// Get the starting times.
+	//var notesArray = notes["notes"];
+	//var startingTimes = notesArray.map(function(value, index, arr) {
+	//	return value["start_time"];
+	//});
+	//post("Starting times: " + startingTimes + "\n");
+
+	clip.call("add_new_notes", notes);
+
+}
+
 function insertBarsIntoClip(barDataList, trackIndex, clipIndex) {
+	throw "I thought I could remove this. I might be wrong.";
 	post("Inserting bar into track " + trackIndex + " clip " + clipIndex + "\n");
 
 	// Get the clip.
@@ -505,7 +666,7 @@ function insertBarsIntoClip(barDataList, trackIndex, clipIndex) {
 function barDataToNotes(barIndex, barData) {
 
 	// Get the BPM.
-	var bpm = getBpm();
+	//var bpm = getBpm();
 
 	// Create the notes object.
 	var notes = {
@@ -513,6 +674,7 @@ function barDataToNotes(barIndex, barData) {
 	}
 
 	var barOffset = barIndex * 32;
+	post("Bar offset: " + barOffset + "\n");
 
 	// The track data has a "notes" array. Iterate through the notes and add the notes to the notes object.
 	for (var i = 0; i < barData["notes"].length; i++) {
@@ -523,8 +685,11 @@ function barDataToNotes(barIndex, barData) {
 		var noteVelocity = 80;
 
 		// Convert the note start and end times to seconds.
-		noteStart = convertTimeToSeconds(noteStart, bpm);
-		noteEnd = convertTimeToSeconds(noteEnd, bpm);
+		//noteStart = convertTimeToSeconds(noteStart, bpm);
+		//noteEnd = convertTimeToSeconds(noteEnd, bpm);
+
+		noteStart = noteStart / 8;
+		noteEnd = noteEnd / 8;
 
 		// Add the note to the notes object.
 		var note = {
@@ -541,6 +706,8 @@ function barDataToNotes(barIndex, barData) {
 }
 
 function notesToBarData(notes) {
+
+	throw "I must fix this. It uses BPM, but it should use beats.";
 
 	// Get the BPM.
 	var bpm = getBpm();
@@ -565,6 +732,8 @@ function notesToBarData(notes) {
 
 
 function getBpm() {
+	throw "I strongly believe, this can go. Everything is in beats now.";
+
 	// Get the beats per minute. From the LiveAPI.
 	var api = new LiveAPI("live_set");
 	var bpm = api.get("tempo");
@@ -604,4 +773,11 @@ function logMessage(message) {
 	var messageLog = this.patcher.getnamed("messageLog");
 	messageLog.set(message);
 	post("[compose.js] " + message + "\n");
+}
+
+
+function assert(condition, message) {
+	if (!condition) {
+		throw message;
+	}
 }
