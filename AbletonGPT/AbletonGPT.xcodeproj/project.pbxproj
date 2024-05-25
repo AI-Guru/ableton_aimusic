@@ -1,0 +1,645 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		34C2CA3B2C010B4000E44C17 /* AbletonGPTApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34C2CA3A2C010B4000E44C17 /* AbletonGPTApp.swift */; };
+		34C2CA3D2C010B4000E44C17 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34C2CA3C2C010B4000E44C17 /* ContentView.swift */; };
+		34C2CA3F2C010B4100E44C17 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 34C2CA3E2C010B4100E44C17 /* Assets.xcassets */; };
+		34C2CA422C010B4100E44C17 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 34C2CA412C010B4100E44C17 /* Preview Assets.xcassets */; };
+		34C2CA4D2C010B4100E44C17 /* AbletonGPTTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34C2CA4C2C010B4100E44C17 /* AbletonGPTTests.swift */; };
+		34C2CA572C010B4100E44C17 /* AbletonGPTUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34C2CA562C010B4100E44C17 /* AbletonGPTUITests.swift */; };
+		34C2CA592C010B4100E44C17 /* AbletonGPTUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34C2CA582C010B4100E44C17 /* AbletonGPTUITestsLaunchTests.swift */; };
+		34C2CA672C010C0C00E44C17 /* MLX in Frameworks */ = {isa = PBXBuildFile; productRef = 34C2CA662C010C0C00E44C17 /* MLX */; };
+		34C2CA692C010C0C00E44C17 /* MLXFFT in Frameworks */ = {isa = PBXBuildFile; productRef = 34C2CA682C010C0C00E44C17 /* MLXFFT */; };
+		34C2CA6B2C010C0C00E44C17 /* MLXLinalg in Frameworks */ = {isa = PBXBuildFile; productRef = 34C2CA6A2C010C0C00E44C17 /* MLXLinalg */; };
+		34C2CA6D2C010C0C00E44C17 /* MLXNN in Frameworks */ = {isa = PBXBuildFile; productRef = 34C2CA6C2C010C0C00E44C17 /* MLXNN */; };
+		34C2CA6F2C010C0C00E44C17 /* MLXOptimizers in Frameworks */ = {isa = PBXBuildFile; productRef = 34C2CA6E2C010C0C00E44C17 /* MLXOptimizers */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		34C2CA492C010B4100E44C17 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 34C2CA2F2C010B4000E44C17 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 34C2CA362C010B4000E44C17;
+			remoteInfo = AbletonGPT;
+		};
+		34C2CA532C010B4100E44C17 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 34C2CA2F2C010B4000E44C17 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 34C2CA362C010B4000E44C17;
+			remoteInfo = AbletonGPT;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		34C2CA372C010B4000E44C17 /* AbletonGPT.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AbletonGPT.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		34C2CA3A2C010B4000E44C17 /* AbletonGPTApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AbletonGPTApp.swift; sourceTree = "<group>"; };
+		34C2CA3C2C010B4000E44C17 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		34C2CA3E2C010B4100E44C17 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		34C2CA412C010B4100E44C17 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		34C2CA432C010B4100E44C17 /* AbletonGPT.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = AbletonGPT.entitlements; sourceTree = "<group>"; };
+		34C2CA482C010B4100E44C17 /* AbletonGPTTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AbletonGPTTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		34C2CA4C2C010B4100E44C17 /* AbletonGPTTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AbletonGPTTests.swift; sourceTree = "<group>"; };
+		34C2CA522C010B4100E44C17 /* AbletonGPTUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AbletonGPTUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		34C2CA562C010B4100E44C17 /* AbletonGPTUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AbletonGPTUITests.swift; sourceTree = "<group>"; };
+		34C2CA582C010B4100E44C17 /* AbletonGPTUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AbletonGPTUITestsLaunchTests.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		34C2CA342C010B4000E44C17 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				34C2CA6F2C010C0C00E44C17 /* MLXOptimizers in Frameworks */,
+				34C2CA672C010C0C00E44C17 /* MLX in Frameworks */,
+				34C2CA6B2C010C0C00E44C17 /* MLXLinalg in Frameworks */,
+				34C2CA6D2C010C0C00E44C17 /* MLXNN in Frameworks */,
+				34C2CA692C010C0C00E44C17 /* MLXFFT in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		34C2CA452C010B4100E44C17 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		34C2CA4F2C010B4100E44C17 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		34C2CA2E2C010B4000E44C17 = {
+			isa = PBXGroup;
+			children = (
+				34C2CA392C010B4000E44C17 /* AbletonGPT */,
+				34C2CA4B2C010B4100E44C17 /* AbletonGPTTests */,
+				34C2CA552C010B4100E44C17 /* AbletonGPTUITests */,
+				34C2CA382C010B4000E44C17 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		34C2CA382C010B4000E44C17 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				34C2CA372C010B4000E44C17 /* AbletonGPT.app */,
+				34C2CA482C010B4100E44C17 /* AbletonGPTTests.xctest */,
+				34C2CA522C010B4100E44C17 /* AbletonGPTUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		34C2CA392C010B4000E44C17 /* AbletonGPT */ = {
+			isa = PBXGroup;
+			children = (
+				34C2CA3A2C010B4000E44C17 /* AbletonGPTApp.swift */,
+				34C2CA3C2C010B4000E44C17 /* ContentView.swift */,
+				34C2CA3E2C010B4100E44C17 /* Assets.xcassets */,
+				34C2CA432C010B4100E44C17 /* AbletonGPT.entitlements */,
+				34C2CA402C010B4100E44C17 /* Preview Content */,
+			);
+			path = AbletonGPT;
+			sourceTree = "<group>";
+		};
+		34C2CA402C010B4100E44C17 /* Preview Content */ = {
+			isa = PBXGroup;
+			children = (
+				34C2CA412C010B4100E44C17 /* Preview Assets.xcassets */,
+			);
+			path = "Preview Content";
+			sourceTree = "<group>";
+		};
+		34C2CA4B2C010B4100E44C17 /* AbletonGPTTests */ = {
+			isa = PBXGroup;
+			children = (
+				34C2CA4C2C010B4100E44C17 /* AbletonGPTTests.swift */,
+			);
+			path = AbletonGPTTests;
+			sourceTree = "<group>";
+		};
+		34C2CA552C010B4100E44C17 /* AbletonGPTUITests */ = {
+			isa = PBXGroup;
+			children = (
+				34C2CA562C010B4100E44C17 /* AbletonGPTUITests.swift */,
+				34C2CA582C010B4100E44C17 /* AbletonGPTUITestsLaunchTests.swift */,
+			);
+			path = AbletonGPTUITests;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		34C2CA362C010B4000E44C17 /* AbletonGPT */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 34C2CA5C2C010B4100E44C17 /* Build configuration list for PBXNativeTarget "AbletonGPT" */;
+			buildPhases = (
+				34C2CA332C010B4000E44C17 /* Sources */,
+				34C2CA342C010B4000E44C17 /* Frameworks */,
+				34C2CA352C010B4000E44C17 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = AbletonGPT;
+			packageProductDependencies = (
+				34C2CA662C010C0C00E44C17 /* MLX */,
+				34C2CA682C010C0C00E44C17 /* MLXFFT */,
+				34C2CA6A2C010C0C00E44C17 /* MLXLinalg */,
+				34C2CA6C2C010C0C00E44C17 /* MLXNN */,
+				34C2CA6E2C010C0C00E44C17 /* MLXOptimizers */,
+			);
+			productName = AbletonGPT;
+			productReference = 34C2CA372C010B4000E44C17 /* AbletonGPT.app */;
+			productType = "com.apple.product-type.application";
+		};
+		34C2CA472C010B4100E44C17 /* AbletonGPTTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 34C2CA5F2C010B4100E44C17 /* Build configuration list for PBXNativeTarget "AbletonGPTTests" */;
+			buildPhases = (
+				34C2CA442C010B4100E44C17 /* Sources */,
+				34C2CA452C010B4100E44C17 /* Frameworks */,
+				34C2CA462C010B4100E44C17 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				34C2CA4A2C010B4100E44C17 /* PBXTargetDependency */,
+			);
+			name = AbletonGPTTests;
+			productName = AbletonGPTTests;
+			productReference = 34C2CA482C010B4100E44C17 /* AbletonGPTTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		34C2CA512C010B4100E44C17 /* AbletonGPTUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 34C2CA622C010B4100E44C17 /* Build configuration list for PBXNativeTarget "AbletonGPTUITests" */;
+			buildPhases = (
+				34C2CA4E2C010B4100E44C17 /* Sources */,
+				34C2CA4F2C010B4100E44C17 /* Frameworks */,
+				34C2CA502C010B4100E44C17 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				34C2CA542C010B4100E44C17 /* PBXTargetDependency */,
+			);
+			name = AbletonGPTUITests;
+			productName = AbletonGPTUITests;
+			productReference = 34C2CA522C010B4100E44C17 /* AbletonGPTUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		34C2CA2F2C010B4000E44C17 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1520;
+				LastUpgradeCheck = 1520;
+				TargetAttributes = {
+					34C2CA362C010B4000E44C17 = {
+						CreatedOnToolsVersion = 15.2;
+					};
+					34C2CA472C010B4100E44C17 = {
+						CreatedOnToolsVersion = 15.2;
+						TestTargetID = 34C2CA362C010B4000E44C17;
+					};
+					34C2CA512C010B4100E44C17 = {
+						CreatedOnToolsVersion = 15.2;
+						TestTargetID = 34C2CA362C010B4000E44C17;
+					};
+				};
+			};
+			buildConfigurationList = 34C2CA322C010B4000E44C17 /* Build configuration list for PBXProject "AbletonGPT" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 34C2CA2E2C010B4000E44C17;
+			packageReferences = (
+				34C2CA652C010C0C00E44C17 /* XCRemoteSwiftPackageReference "mlx-swift" */,
+			);
+			productRefGroup = 34C2CA382C010B4000E44C17 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				34C2CA362C010B4000E44C17 /* AbletonGPT */,
+				34C2CA472C010B4100E44C17 /* AbletonGPTTests */,
+				34C2CA512C010B4100E44C17 /* AbletonGPTUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		34C2CA352C010B4000E44C17 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				34C2CA422C010B4100E44C17 /* Preview Assets.xcassets in Resources */,
+				34C2CA3F2C010B4100E44C17 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		34C2CA462C010B4100E44C17 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		34C2CA502C010B4100E44C17 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		34C2CA332C010B4000E44C17 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				34C2CA3D2C010B4000E44C17 /* ContentView.swift in Sources */,
+				34C2CA3B2C010B4000E44C17 /* AbletonGPTApp.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		34C2CA442C010B4100E44C17 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				34C2CA4D2C010B4100E44C17 /* AbletonGPTTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		34C2CA4E2C010B4100E44C17 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				34C2CA592C010B4100E44C17 /* AbletonGPTUITestsLaunchTests.swift in Sources */,
+				34C2CA572C010B4100E44C17 /* AbletonGPTUITests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		34C2CA4A2C010B4100E44C17 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 34C2CA362C010B4000E44C17 /* AbletonGPT */;
+			targetProxy = 34C2CA492C010B4100E44C17 /* PBXContainerItemProxy */;
+		};
+		34C2CA542C010B4100E44C17 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 34C2CA362C010B4000E44C17 /* AbletonGPT */;
+			targetProxy = 34C2CA532C010B4100E44C17 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		34C2CA5A2C010B4100E44C17 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.2;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		34C2CA5B2C010B4100E44C17 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.2;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+			};
+			name = Release;
+		};
+		34C2CA5D2C010B4100E44C17 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = AbletonGPT/AbletonGPT.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"AbletonGPT/Preview Content\"";
+				DEVELOPMENT_TEAM = U5PKHACMF3;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = de.tristanbehrens.AbletonGPT;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		34C2CA5E2C010B4100E44C17 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = AbletonGPT/AbletonGPT.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"AbletonGPT/Preview Content\"";
+				DEVELOPMENT_TEAM = U5PKHACMF3;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = de.tristanbehrens.AbletonGPT;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		34C2CA602C010B4100E44C17 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = U5PKHACMF3;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.2;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = de.tristanbehrens.AbletonGPTTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/AbletonGPT.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/AbletonGPT";
+			};
+			name = Debug;
+		};
+		34C2CA612C010B4100E44C17 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = U5PKHACMF3;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.2;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = de.tristanbehrens.AbletonGPTTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/AbletonGPT.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/AbletonGPT";
+			};
+			name = Release;
+		};
+		34C2CA632C010B4100E44C17 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = U5PKHACMF3;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = de.tristanbehrens.AbletonGPTUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TEST_TARGET_NAME = AbletonGPT;
+			};
+			name = Debug;
+		};
+		34C2CA642C010B4100E44C17 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = U5PKHACMF3;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = de.tristanbehrens.AbletonGPTUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TEST_TARGET_NAME = AbletonGPT;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		34C2CA322C010B4000E44C17 /* Build configuration list for PBXProject "AbletonGPT" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				34C2CA5A2C010B4100E44C17 /* Debug */,
+				34C2CA5B2C010B4100E44C17 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		34C2CA5C2C010B4100E44C17 /* Build configuration list for PBXNativeTarget "AbletonGPT" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				34C2CA5D2C010B4100E44C17 /* Debug */,
+				34C2CA5E2C010B4100E44C17 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		34C2CA5F2C010B4100E44C17 /* Build configuration list for PBXNativeTarget "AbletonGPTTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				34C2CA602C010B4100E44C17 /* Debug */,
+				34C2CA612C010B4100E44C17 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		34C2CA622C010B4100E44C17 /* Build configuration list for PBXNativeTarget "AbletonGPTUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				34C2CA632C010B4100E44C17 /* Debug */,
+				34C2CA642C010B4100E44C17 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		34C2CA652C010C0C00E44C17 /* XCRemoteSwiftPackageReference "mlx-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/ml-explore/mlx-swift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.10.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		34C2CA662C010C0C00E44C17 /* MLX */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 34C2CA652C010C0C00E44C17 /* XCRemoteSwiftPackageReference "mlx-swift" */;
+			productName = MLX;
+		};
+		34C2CA682C010C0C00E44C17 /* MLXFFT */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 34C2CA652C010C0C00E44C17 /* XCRemoteSwiftPackageReference "mlx-swift" */;
+			productName = MLXFFT;
+		};
+		34C2CA6A2C010C0C00E44C17 /* MLXLinalg */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 34C2CA652C010C0C00E44C17 /* XCRemoteSwiftPackageReference "mlx-swift" */;
+			productName = MLXLinalg;
+		};
+		34C2CA6C2C010C0C00E44C17 /* MLXNN */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 34C2CA652C010C0C00E44C17 /* XCRemoteSwiftPackageReference "mlx-swift" */;
+			productName = MLXNN;
+		};
+		34C2CA6E2C010C0C00E44C17 /* MLXOptimizers */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 34C2CA652C010C0C00E44C17 /* XCRemoteSwiftPackageReference "mlx-swift" */;
+			productName = MLXOptimizers;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 34C2CA2F2C010B4000E44C17 /* Project object */;
+}

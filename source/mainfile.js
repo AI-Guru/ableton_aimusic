@@ -1,0 +1,4 @@
+function bang() {
+	post("FUCK");
+		
+}
