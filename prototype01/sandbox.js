@@ -1,6 +1,65 @@
 autowatch = 1;
 
 function bang() {
+
+    // Get all tracks.
+    var liveSet = LiveAPI("live_set");
+    var numberOfTracks = liveSet.getcount("tracks");
+    post(numberOfTracks + "\n");
+
+    // Post the name for each track.
+    for (var trackIndex=0; trackIndex < numberOfTracks; trackIndex++) {
+        var track = LiveAPI("live_set tracks " + trackIndex);
+        var trackName = track.get("name");
+        post(trackName + "\n");
+    }
+
+    // Get the number of clip slots.
+    var trackIndex = 1;
+    var track = LiveAPI("live_set tracks " + trackIndex);
+    var numberOfClipSlots = track.getcount("clip_slots");
+    post("Track " + trackIndex + " has " + numberOfClipSlots + " clip slots." + "\n");
+
+    // See if any clip slot has clips.
+    for (var clipSlotIndex=0; clipSlotIndex < numberOfClipSlots; clipSlotIndex++) {
+        var clipSlot = LiveAPI("live_set tracks " + trackIndex + " clip_slots " + clipSlotIndex);
+        var clipInClipSlot = clipSlot.get("clip");
+        if (clipInClipSlot[1] == 0) {
+            post("No clip in clip slot " + clipSlotIndex + "\n")
+        }
+    }
+
+    // Get the first empty clip slot.
+    var emptyClipSlotIndex = -1;
+    for (var clipSlotIndex=0; clipSlotIndex < numberOfClipSlots; clipSlotIndex++) {
+        var clipSlot = LiveAPI("live_set tracks " + trackIndex + " clip_slots " + clipSlotIndex);
+        var clipInClipSlot = clipSlot.get("clip");
+        if (clipInClipSlot[1] == 0) {
+            emptyClipSlotIndex = clipSlotIndex;
+            break
+        }
+    }
+    if (emptyClipSlotIndex != -1) {
+        post("Found empty clip slot at index " + emptyClipSlotIndex);
+    }
+
+    // Create a clip.
+    var clipSlot = LiveAPI("live_set tracks " + trackIndex + " clip_slots " + emptyClipSlotIndex);
+    clipSlot.call("create_clip", 4);
+
+    // Get the clip.
+    var clipInClipSlot = clipSlot.get("clip");
+    //clipInClipSlot.name.set("666");
+
+    // Get the track.
+    var track = LiveAPI("live_set tracks " + trackIndex);
+    track.call("duplicate_clip_to_arrangement", clipInClipSlot, 24);
+    clipSlot.call("delete_clip");
+
+}
+
+function oldStuff() {
+
     post("[sandbox.js] bang\n");
 
     // Get the loop status in beats.
