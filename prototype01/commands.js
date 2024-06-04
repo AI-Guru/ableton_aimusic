@@ -323,7 +323,7 @@ function getSongDataFromTrackIndices(trackIndices, startBeat, lengthBeats) {
 	}
 
 	// Print as JSON.
-	post("[compose.js] Song data: " + JSON.stringify(songData) + "\n");
+	//post("[compose.js] Song data: " + JSON.stringify(songData) + "\n");
 
 	return songData;
 }
@@ -546,11 +546,11 @@ function createNewClip(trackIndex, startBeats) {
 
     // Find the first empty clip slot.
     var emptyClipSlotIndex = -1;
-    for (var i = 0; i < clipSlots.length; i++) {
-        var clipSlot = new LiveAPI(clipSlots[i]);
-        var clip = clipSlot.get("clip");
-        if (!clip) {
-            emptyClipSlotIndex = i;
+    for (var clipSlotIndex = 0; clipSlotIndex < clipSlots.length; clipSlotIndex++) {
+		var clipSlot = LiveAPI("live_set tracks " + trackIndex + " clip_slots " + clipSlotIndex);
+        var clipInClipSlot = clipSlot.get("clip");
+        if (clipInClipSlot[1] == 0) {
+            emptyClipSlotIndex = clipSlotIndex;
             break;
         }
     }
