@@ -2,6 +2,68 @@ autowatch = 1;
 
 function bang() {
 
+    post("Howdy!")
+
+    var trackIndex = 1;
+    var startBeats = 16;
+    var lengthBeats = 4;
+    var clipIndex = createNewClip(trackIndex, startBeats, lengthBeats);
+    post("Inserted clip at index " + clipIndex + "\n");
+}
+
+function createNewClip(trackIndex, startBeats, lengthBeats) {
+
+    // Get the track.
+    var track = new LiveAPI("live_set tracks " + trackIndex);
+
+    // Get the clip slots.
+    var clipSlots = track.get("clip_slots");
+
+    // Find the first empty clip slot.
+    var emptyClipSlotIndex = -1;
+    for (var i = 0; i < clipSlots.length; i++) {
+        var clipSlot = new LiveAPI(clipSlots[i]);
+        var clip = clipSlot.get("clip");
+        if (!clip) {
+            emptyClipSlotIndex = i;
+            break;
+        }
+    }
+
+    // Create a new clip.
+    post("Creating clip at index " + emptyClipSlotIndex + "\n");
+    var clipSlot = new LiveAPI("live_set tracks " + trackIndex + " clip_slots " + emptyClipSlotIndex);
+    clipSlot.call("create_clip", 4);
+
+    // Get the clip.
+    var clipInClipSlot = clipSlot.get("clip");
+
+    // Get the track.
+    var track = LiveAPI("live_set tracks " + trackIndex);
+    track.call("duplicate_clip_to_arrangement", clipInClipSlot, startBeats);
+    clipSlot.call("delete_clip");
+
+    // Get the index.
+    var arrangementClipsCount = track.getcount("arrangement_clips");
+    post("arrangementClipsCount: ", arrangementClipsCount, "\n");
+
+    // Find the clip index.
+    for (var i = 0; i < arrangementClipsCount; i++) {
+        var clip = new LiveAPI("live_set tracks " + trackIndex + " arrangement_clips " + i);
+        var clipStartBeats = clip.get("start_time");
+        post("clipStartBeats: ", clipStartBeats, "\n");
+        if (clipStartBeats == startBeats) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+function createNewClipOld(trackIndex, startBeats, lengthBeats) {
+
+
+    return;
+
     // Get all tracks.
     var liveSet = LiveAPI("live_set");
     var numberOfTracks = liveSet.getcount("tracks");
@@ -49,7 +111,6 @@ function bang() {
 
     // Get the clip.
     var clipInClipSlot = clipSlot.get("clip");
-    //clipInClipSlot.name.set("666");
 
     // Get the track.
     var track = LiveAPI("live_set tracks " + trackIndex);
@@ -58,6 +119,7 @@ function bang() {
 
 }
 
+/*
 function oldStuff() {
 
     post("[sandbox.js] bang\n");
@@ -113,17 +175,6 @@ function oldStuff() {
             post("notes: ", notes, " ", typeof notes, "\n");
         }
     }
-
-
-
-    return;
-
-    
-
-
-
-    // Get all the arrangement tracks that are in the loop.
-    var clipsInLoop = getClipsInRange(loopStatusBars.loopStartBars, loopStatusBars.loopStartBars + loopStatusBars.loopLengthBars);
 
 }
 
@@ -197,4 +248,4 @@ function getClipsInRange(startBar, endBar) {
 
     return clips;
 
-}
+}*/

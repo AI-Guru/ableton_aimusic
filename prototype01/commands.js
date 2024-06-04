@@ -77,6 +77,10 @@ function executeAddInstrumentCommand() {
 	var temperature = getTemperature();
 	post("[compose.js] Temperature: " + temperature + "\n");
 
+	// Get the selected model.
+	var model = getModel();
+	post("[compose.js] Model: " + model + "\n");
+
 	// Get the song data for the other instruments.
 	var songData = getSongDataFromTrackIndices(aiTracksNotSelected, startBeat, lengthBeats);
 
@@ -86,6 +90,7 @@ function executeAddInstrumentCommand() {
 		"genre": genre,
 		"density": 4,
 		"temperature": temperature,
+		"model": model,
 		"harmonymode": "polyphone",
 		"instrumentmode": "full",
 		"selectednotes": ["C", "C#/Db", "D", "D#/Eb", "E", "F", "F#/Gb", "G", "G#/Ab", "A", "A#/Bb", "B"],
@@ -276,6 +281,19 @@ function getTemperature() {
 	return parseFloat(temperature);
 }
 
+function getModel() {
+
+	var selectedModelObject = this.patcher.getnamed("selectedModel");
+
+	// Get the genre name from the config.
+	var modelItems = selectedModelObject.getattr("items")
+
+	// Get and return the selected genre.
+	var selectedModelIndex = selectedModelObject.getvalueof();
+	var selectedModel = modelItems[selectedModelIndex * 2];
+	return selectedModel;
+}
+
 function getSongDataFromTrackIndices(trackIndices, startBeat, lengthBeats) {
 	
 	post("[compose.js] Getting song data from track indices " + trackIndices + " start beat: " + startBeat + " length beats: " + lengthBeats + "\n");
@@ -457,32 +475,32 @@ function handleAddInstrumentResult(result, trackIndex, startBeat, lengthBeats) {
 
 	// Go through the bars.
 	var insertionData = [];
-	for (var i = 0; i < bars.length; i++) {
-		var barStartBeats = startBeat + i * 4;
+	for (var barIndex = 0; barIndex < bars.length; barIndex++) {
+		var barStartBeats = startBeat + barIndex * 4;
 		var barLengthBeats = 4;
-		post("Bar index: " + i + " start: " + barStartBeats + " length: " + barLengthBeats + "\n");
-		var barData = bars[i];
-		var barPositionInLoopBeats = i * 4 + startBeat;
+		post("Bar index: " + barIndex + " start: " + barStartBeats + " length: " + barLengthBeats + "\n");
+		var barData = bars[barIndex];
+		var barPositionInLoopBeats = barIndex * 4 + startBeat;
 		post("Bar position in loop: " + barPositionInLoopBeats + "\n");
 
 		// Find the first clip that intersects with the bar.
-		var inserted = false;
+		var offsetInClipInBeats = startBeat + barIndex * 4;
+		var foundClipIndex = -1;
 		for (var clipIndex = 0; clipIndex < numberOfArrangementClipsInTrack; clipIndex++) {
 			var clip = new LiveAPI("live_set tracks " + trackIndex + " arrangement_clips " + clipIndex);
 			var clipStartTime = parseInt(clip.get("start_time"));
 			var clipLength = parseInt(clip.get("length"));
 			if (clipStartTime <= barStartBeats && clipStartTime + clipLength >= barStartBeats + barLengthBeats) {
-				var offsetInClipInBeats = barPositionInLoopBeats - clipStartTime;
-				post("Inserting bar into clip: " + clipIndex + " offset: " + offsetInClipInBeats + "\n");
-				insertionData.push([clipIndex, barData, offsetInClipInBeats]);
-				inserted = true;
-				post("\n");
+				offsetInClipInBeats = barPositionInLoopBeats - clipStartTime;
+				foundClipIndex = clipIndex;
 				break;
 			}
 		}
-		if (!inserted) {
-			post("No clip found for bar.\n");
-		}
+		post("Inserting bar into clip: " + clipIndex + " offset: " + offsetInClipInBeats + "\n");
+		insertionData.push([foundClipIndex, barData, offsetInClipInBeats, barIndex]);
+		//if (!inserted) {
+		//	post("No clip found for bar.\n");
+		//}
 
 	}
 
@@ -492,8 +510,11 @@ function handleAddInstrumentResult(result, trackIndex, startBeat, lengthBeats) {
 	});
 	post("Clip indices: " + clipIndices + "\n");
 
-	// Clear the clips.
-	clearClips(trackIndex, clipIndices);
+	// Clear the clips. Only those that are not -1.
+	var nonEmptyClipIndices = clipIndices.filter(function(value, index, arr) {
+		return value != -1;
+	});
+	clearClips(trackIndex, nonEmptyClipIndices);
 
 	// Insert the bars into the clips.
 	for (var i = 0; i < insertionData.length; i++) {
@@ -501,10 +522,68 @@ function handleAddInstrumentResult(result, trackIndex, startBeat, lengthBeats) {
 		var clipIndex = data[0];
 		var barData = data[1];
 		var offsetInClipInBeats = data[2];
+		var barIndex = data[3];
+		if (clipIndex == -1) {
+			post("No clip found for bar " + barIndex + " in track " + trackIndex + " offset: " + offsetInClipInBeats + "\n");
+			clipIndex = createNewClip(trackIndex, offsetInClipInBeats);
+			offsetInClipInBeats = 0;
+			continue;
+		}
+		post("Inserting bar into clip " + clipIndex + " in track " + trackIndex + " offset: " + offsetInClipInBeats + "\n");
 		insertBarIntoClip(barData, trackIndex, clipIndex, offsetInClipInBeats);
 	}
 }
 
+function createNewClip(trackIndex, startBeats) {
+
+    // Get the track.
+    var track = new LiveAPI("live_set tracks " + trackIndex);
+	post("Track: " + track + "\n");
+
+    // Get the clip slots.
+    var clipSlots = track.get("clip_slots");
+	post("Clip slots: " + clipSlots + "\n");
+
+    // Find the first empty clip slot.
+    var emptyClipSlotIndex = -1;
+    for (var i = 0; i < clipSlots.length; i++) {
+        var clipSlot = new LiveAPI(clipSlots[i]);
+        var clip = clipSlot.get("clip");
+        if (!clip) {
+            emptyClipSlotIndex = i;
+            break;
+        }
+    }
+	post("Empty clip slot index: " + emptyClipSlotIndex + "\n");
+
+    // Create a new clip.
+    post("Creating clip at index " + emptyClipSlotIndex + "\n");
+    var clipSlot = new LiveAPI("live_set tracks " + trackIndex + " clip_slots " + emptyClipSlotIndex);
+    clipSlot.call("create_clip", 4);
+
+    // Get the clip.
+    var clipInClipSlot = clipSlot.get("clip");
+
+    // Get the track.
+    var track = LiveAPI("live_set tracks " + trackIndex);
+    track.call("duplicate_clip_to_arrangement", clipInClipSlot, startBeats);
+    clipSlot.call("delete_clip");
+
+    // Get the index.
+    var arrangementClipsCount = track.getcount("arrangement_clips");
+    post("arrangementClipsCount: ", arrangementClipsCount, "\n");
+
+    // Find the clip index.
+    for (var i = 0; i < arrangementClipsCount; i++) {
+        var clip = new LiveAPI("live_set tracks " + trackIndex + " arrangement_clips " + i);
+        var clipStartBeats = clip.get("start_time");
+        post("clipStartBeats: ", clipStartBeats, "\n");
+        if (clipStartBeats == startBeats) {
+            return i;
+        }
+    }
+    return -1;
+}
 
 function clearClips(trackIndex, clipIndices) {
 	for (var i = 0; i < clipIndices.length; i++) {
