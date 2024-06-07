@@ -36,7 +36,7 @@ function executeAddInstrumentCommand() {
 	// Get all the AI tracks.
 	var aiTracksIndices = getAiTracksIndices();
 	if (aiTracksIndices.length == 0) {
-		logMessage("No AI tracks found.");
+		post("No AI tracks found.");
 		return;
 	}
     post("[compose.js] AI tracks found: " + aiTracksIndices + "\n");
@@ -44,11 +44,11 @@ function executeAddInstrumentCommand() {
 	// Get the index of the selected AI track.
 	var selectedTrackIndices = getSelectedAiTrackIndices();
 	if (selectedTrackIndices.length == 0) {
-		logMessage("No AI tracks selected.");
+		displayMessage("No AI tracks selected.");
 		return;
 	}
 	if (selectedTrackIndices.length > 1) {
-		logMessage("More than one AI track selected.");
+		post("More than one AI track selected.");
 		return;
 	}
 
@@ -81,6 +81,9 @@ function executeAddInstrumentCommand() {
 	var model = getModel();
 	post("[compose.js] Model: " + model + "\n");
 
+	var apiToken = getApiToken();
+	post("[compose.js] API token: " + apiToken + "\n");
+
 	// Get the song data for the other instruments.
 	var songData = getSongDataFromTrackIndices(aiTracksNotSelected, startBeat, lengthBeats);
 
@@ -100,7 +103,8 @@ function executeAddInstrumentCommand() {
 	var command = {
 		"command": "addinstrument",
 		"data": songData,
-		"parameters": parameters
+		"parameters": parameters,
+		"apitoken": apiToken
 	};
 
 	var arguments = {
@@ -159,7 +163,6 @@ function getAiTracksIndices() {
 	}
 
 	return aiTracksIndices;
-
 }
 
 function getSelectedAiTrackIndices() {
@@ -292,6 +295,15 @@ function getModel() {
 	var selectedModelIndex = selectedModelObject.getvalueof();
 	var selectedModel = modelItems[selectedModelIndex * 2];
 	return selectedModel;
+}
+
+function getApiToken() {
+	var apiTokenObject = this.patcher.getnamed("apiTokenField");
+	var apiToken = apiTokenObject.getvalueof();
+	// Map to string.
+	apiToken = apiToken.toString();
+	post(typeof apiToken + "\n");
+	return apiToken;
 }
 
 function getSongDataFromTrackIndices(trackIndices, startBeat, lengthBeats) {
@@ -443,6 +455,14 @@ function postCommandResponse(result) {
 
 	post("[compose.js] Post command response received.\n");
 
+	post("Result: " + JSON.stringify(result) + "\n");
+
+	// Handle errors.
+	if (result.result.error) {
+		displayMessage("Error: " + result.result.error);
+		return;
+	}
+
 	// Get the command name from the result object.
 	var commandName = result.command.command;
 	if (commandName == "addinstrument") {
@@ -459,6 +479,8 @@ function postCommandResponse(result) {
 
 function handleAddInstrumentResult(result, trackIndex, startBeat, lengthBeats) {
 	post("[compose.js] Handling addinstrument result.\n");
+
+	post("result", result.result);
 
 	// Get the track data from the result object. It is the last one.
 	var songData = result["result"]["song_data"];
@@ -527,7 +549,7 @@ function handleAddInstrumentResult(result, trackIndex, startBeat, lengthBeats) {
 			post("No clip found for bar " + barIndex + " in track " + trackIndex + " offset: " + offsetInClipInBeats + "\n");
 			clipIndex = createNewClip(trackIndex, offsetInClipInBeats);
 			offsetInClipInBeats = 0;
-			continue;
+			//continue;
 		}
 		post("Inserting bar into clip " + clipIndex + " in track " + trackIndex + " offset: " + offsetInClipInBeats + "\n");
 		insertBarIntoClip(barData, trackIndex, clipIndex, offsetInClipInBeats);
@@ -538,11 +560,11 @@ function createNewClip(trackIndex, startBeats) {
 
     // Get the track.
     var track = new LiveAPI("live_set tracks " + trackIndex);
-	post("Track: " + track + "\n");
+	//post("Track: " + track + "\n");
 
     // Get the clip slots.
     var clipSlots = track.get("clip_slots");
-	post("Clip slots: " + clipSlots + "\n");
+	//post("Clip slots: " + clipSlots + "\n");
 
     // Find the first empty clip slot.
     var emptyClipSlotIndex = -1;
@@ -554,10 +576,10 @@ function createNewClip(trackIndex, startBeats) {
             break;
         }
     }
-	post("Empty clip slot index: " + emptyClipSlotIndex + "\n");
+	//post("Empty clip slot index: " + emptyClipSlotIndex + "\n");
 
     // Create a new clip.
-    post("Creating clip at index " + emptyClipSlotIndex + "\n");
+    //post("Creating clip at index " + emptyClipSlotIndex + "\n");
     var clipSlot = new LiveAPI("live_set tracks " + trackIndex + " clip_slots " + emptyClipSlotIndex);
     clipSlot.call("create_clip", 4);
 
@@ -571,14 +593,15 @@ function createNewClip(trackIndex, startBeats) {
 
     // Get the index.
     var arrangementClipsCount = track.getcount("arrangement_clips");
-    post("arrangementClipsCount: ", arrangementClipsCount, "\n");
+    //post("arrangementClipsCount: ", arrangementClipsCount, "\n");
 
     // Find the clip index.
     for (var i = 0; i < arrangementClipsCount; i++) {
         var clip = new LiveAPI("live_set tracks " + trackIndex + " arrangement_clips " + i);
         var clipStartBeats = clip.get("start_time");
-        post("clipStartBeats: ", clipStartBeats, "\n");
+        //post("clipStartBeats: ", clipStartBeats, "\n");
         if (clipStartBeats == startBeats) {
+			post("Returning clip index: " + i + "\n");
             return i;
         }
     }
@@ -674,6 +697,32 @@ function logMessage(message) {
 	post("[compose.js] " + message + "\n");
 }
 
+function displayMessage(message) {
+	post("[compose.js] " + message + "\n");
+
+	// Get the message field. It is a textedit object.
+	var messageField = this.patcher.getnamed("messageField");
+	messageField.append(message + "\n");
+	return
+
+	// Add message as a line.
+	var currentText = messageField.getvalueof();
+	var newText = currentText + message + "\n";
+
+	// Split into lines.
+	var lines = newText.split("\n");
+
+	// Only keep the last 10 lines.
+	var numLines = 6;
+	if (lines.length > numLines) {
+		lines = lines.slice(lines.length - numLines);
+	}
+
+
+	newText = lines.join("\n");
+	newText = newText.replace(/"/g, "");
+	messageField.set(newText);
+}
 
 function assert(condition, message) {
 	if (!condition) {
