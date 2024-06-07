@@ -129,14 +129,23 @@ function postCommand(command, callArguments) {
     xhr.setRequestHeader("Content-Type", "application/json");
     xhr.onreadystatechange = function() {
         if (xhr.readyState == 4) {
-			var responseJSON = JSON.parse(xhr.responseText);
-			var result = {
-				"command": command,
-				"arguments": callArguments,
-				"result": responseJSON
-			};
-			postCommandResponse(result);
+			try {
+				var responseJSON = JSON.parse(xhr.responseText);
+				var result = {
+					"command": command,
+					"arguments": callArguments,
+					"result": responseJSON
+				};
+				postCommandResponse(result);
+			}
+			catch (error) {
+				post("Error:" + xhr.responseText + " " + xhr.statusText + "\n");
+				displayMessage("Error: Could not communicate with server.");
+			}
         }
+		else {
+			post("Error: " + xhr.statusText + "\n");
+		}
     }.bind(this);
     xhr.send(JSON.stringify(command));
 
@@ -702,8 +711,6 @@ function displayMessage(message) {
 
 	// Get the message field. It is a textedit object.
 	var messageField = this.patcher.getnamed("messageField");
-	messageField.append(message + "\n");
-	return
 
 	// Add message as a line.
 	var currentText = messageField.getvalueof();
