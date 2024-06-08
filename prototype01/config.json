@@ -1,26 +1,43 @@
 {
-	"key" : "value66asa6",
-    "trackNames": [
+	"keyDELETE" : "value66asa6",
+    "trackNamesDELETE": [
         "AI Drums",
         "AI Bass",
         "AI Guitar"
     ],
     "instruments": [
-        "Drums",
+        "Piano",
+        "Organ",
+        "Guitar",
         "Bass",
-        "Guitar"
+        "Strings",
+        "Brass",
+        "Reed",
+        "Pipe",
+        "SynthLead",
+        "SynthPad",
+        "Drums"
     ],
     "instrumentsToMidi": {
-        "Drums": "drums",
+        "Piano": "0",
+        "Organ": "19",
+        "Guitar": "29",
         "Bass": "34",
-        "Guitar": "29"
+        "Strings": "48",
+        "Brass": "61",
+        "Reed": "71",
+        "Pipe": "73",
+        "SynthLead": "81",
+        "SynthPad": "89",
+        "Drums": "drums"
+
     },
-    "midiToTrackNames": {
+    "midiToTrackNamesDELETE": {
         "drums": "AI Drums",
         "34": "AI Bass",
         "29": "AI Guitar"
     },
-    "midiInstruments": [
+    "midiInstrumentsDELETE": [
         "drums",
         "34",
         "29"
