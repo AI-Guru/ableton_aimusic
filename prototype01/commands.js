@@ -139,12 +139,11 @@ function postCommand(command, callArguments) {
 				postCommandResponse(result);
 			}
 			catch (error) {
-				post("Error:" + xhr.responseText + " " + xhr.statusText + "\n");
-				displayMessage("Error: Could not communicate with server.");
+				displayMessage("1 Error: Could not communicate with server.");
 			}
         }
 		else {
-			post("Error: " + xhr.statusText + "\n");
+			displayMessage("2 Error: " + xhr.statusText + "\n");
 		}
     }.bind(this);
     xhr.send(JSON.stringify(command));
@@ -468,7 +467,7 @@ function postCommandResponse(result) {
 
 	// Handle errors.
 	if (result.result.error) {
-		displayMessage("Error: " + result.result.error);
+		displayMessage("3. Error: " + result.result.error);
 		return;
 	}
 
@@ -709,8 +708,14 @@ function logMessage(message) {
 function displayMessage(message) {
 	post("[compose.js] " + message + "\n");
 
-	// Get the message field. It is a textedit object.
 	var messageField = this.patcher.getnamed("messageField");
+
+	messageField.set("");
+	messageField.set(message);
+	return;
+
+
+	// Get the message field. It is a textedit object.
 
 	// Add message as a line.
 	var currentText = messageField.getvalueof();
