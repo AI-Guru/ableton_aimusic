@@ -5,10 +5,29 @@ outlets = 1;
 // Load the config.
 config = getConfig();
 
+logLevel = "info";
+
+function log(messageLogLevel, message) {
+	var allLogLevels = ["error", "warning", "info", "debug"];
+	if (allLogLevels.indexOf(messageLogLevel) == -1) {
+		raise;
+	}
+
+	var visibleLogLevels = [];
+	if (logLevel == "info") {
+		visibleLogLevels = ["info", "error"];
+	}
+	else if (logLevel == "debug") {
+		visibleLogLevels = ["info", "debug", "error"];
+	}
+	if (visibleLogLevels.indexOf(messageLogLevel) != -1) {
+		post("[compose.js]" + messageLogLevel + ": " + message);
+	}
+}
 
 // Execute the command.
 function executeCommand(commandName) {
-	post("[compose.js] Executing command: " + commandName + "\n");
+	log("debug", "Executing command: " + commandName + "\n");
 	if (commandName == "addinstrument") {
 		executeAddInstrumentCommand();
 	}
@@ -19,7 +38,7 @@ function executeCommand(commandName) {
 		executeClearTrackCommand();
 	}
 	else {
-		post("Unknown command: " + commandName + "\n");
+		log("error", "Unknown command: " + commandName + "\n");
 	}
 }
 
@@ -31,15 +50,15 @@ function executeAddInstrumentCommand() {
 	var startBeat = loopInfoBeats.loopStartBeats;
 	//var lengthBeats = loopInfoBeats.loopLengthBeats;
 	var lengthBeats = 16;
-	post("[compose.js] Loop start beat: " + startBeat + " length beats: " + lengthBeats + "\n");
+	log("debug", "Loop start beat: " + startBeat + " length beats: " + lengthBeats + "\n");
 
 	// Get all the AI tracks.
 	var aiTracksIndices = getAiTracksIndices();
 	if (aiTracksIndices.length == 0) {
-		post("No AI tracks found.");
+		log("error", "No AI tracks found.");
 		return;
 	}
-    post("[compose.js] AI tracks found: " + aiTracksIndices + "\n");
+    log("debug", "AI tracks found: " + aiTracksIndices + "\n");
 
 	// Get the index of the selected AI track.
 	var selectedTrackIndices = getSelectedAiTrackIndices();
@@ -48,7 +67,7 @@ function executeAddInstrumentCommand() {
 		return;
 	}
 	if (selectedTrackIndices.length > 1) {
-		post("More than one AI track selected.");
+		log("error", "More than one AI track selected.");
 		return;
 	}
 
@@ -57,32 +76,32 @@ function executeAddInstrumentCommand() {
 		return selectedTrackIndices.indexOf(value) == -1;
 	});
 
-	post("[compose.js] Selected AI track index: " + selectedTrackIndices[0] + " all: " + aiTracksIndices + "\n");
-	post("[compose.js] AI tracks not selected: " + aiTracksNotSelected + "\n");
+	log("debug", "Selected AI track index: " + selectedTrackIndices[0] + " all: " + aiTracksIndices + "\n");
+	log("debug", "AI tracks not selected: " + aiTracksNotSelected + "\n");
 
 	// Only use the first AI track.
 	var trackIndex = selectedTrackIndices[0];
 	var trackName = new LiveAPI("live_set tracks " + trackIndex).get("name").toString();
-	post("[compose.js] Selected track name: " + trackName + "\n");
+	log("debug", "Selected track name: " + trackName + "\n");
 
 	// Get the selected instrument MIDI.
 	var instrument = getInstrumentFromTrackName(trackName);
-	post("[compose.js] Selected instrument MIDI: " + instrument + "\n");
+	log("debug", "Selected instrument MIDI: " + instrument + "\n");
 
 	// Get the selected genre.
 	var genre = getSelectedGenre();
-	post("[compose.js] Selected genre: " + genre + "\n");
+	log("debug", "Selected genre: " + genre + "\n");
 
 	// Get the temperature.
 	var temperature = getTemperature();
-	post("[compose.js] Temperature: " + temperature + "\n");
+	log("debug", "Temperature: " + temperature + "\n");
 
 	// Get the selected model.
 	var model = getModel();
-	post("[compose.js] Model: " + model + "\n");
+	log("debug", "Model: " + model + "\n");
 
 	var apiToken = getApiToken();
-	post("[compose.js] API token: " + apiToken + "\n");
+	log("debug", "API token: " + apiToken + "\n");
 
 	// Get the song data for the other instruments.
 	var songData = getSongDataFromTrackIndices(aiTracksNotSelected, startBeat, lengthBeats);
@@ -230,19 +249,19 @@ function executeClearTrackCommand(trackName) {
 		var selectedInstrumentMidi = config["instrumentsToMidi"][selectedInstrumentName];
 		trackName = config["midiToTrackNames"][selectedInstrumentMidi];
 	}
-	post("[compose.js] Clearing track: " + trackName + "\n");
+	log("debug", "Clearing track: " + trackName + "\n");
 
 	// Get the track index.
 	var trackIndex = getTrackIndexWithName(trackName);
 	if (trackIndex == -1) {
-		post("Track not found: " + trackName + "\n");
+		log("error", "Track not found: " + trackName + "\n");
 		return;
 	}
 
 	// Get the clips of the track.
 	var clipIndices = getArrangementClipIndices(trackIndex);
 	clipIndices = sortClipIndicesByPosition(trackIndex, clipIndices);
-	post("Clips: " + clipIndices + "\n");
+	log("debug", "Clips: " + clipIndices + "\n");
 
 	// Delete all notes from the clips.
 	for (var i = 0; i < clipIndices.length; i++) {
@@ -310,13 +329,12 @@ function getApiToken() {
 	var apiToken = apiTokenObject.getvalueof();
 	// Map to string.
 	apiToken = apiToken.toString();
-	post(typeof apiToken + "\n");
 	return apiToken;
 }
 
 function getSongDataFromTrackIndices(trackIndices, startBeat, lengthBeats) {
 	
-	post("[compose.js] Getting song data from track indices " + trackIndices + " start beat: " + startBeat + " length beats: " + lengthBeats + "\n");
+	log("debug", "Getting song data from track indices " + trackIndices + " start beat: " + startBeat + " length beats: " + lengthBeats + "\n");
 
 	var songData = {
 		"tracks": []
@@ -338,12 +356,9 @@ function getSongDataFromTrackIndices(trackIndices, startBeat, lengthBeats) {
 			songData["tracks"].push(trackData);
 		}
 		else {
-			post("[compose.js] Track is empty: " + midiInstrument + "\n");
+			log("debug", "Track is empty: " + midiInstrument + "\n");
 		}
 	}
-
-	// Print as JSON.
-	//post("[compose.js] Song data: " + JSON.stringify(songData) + "\n");
 
 	return songData;
 }
@@ -357,7 +372,7 @@ function getTrackDataForIndex(trackIndex, startBeat, lengthBeats) {
 
 	// Get the instrument.
 	var instrument = getInstrumentFromTrackName(trackName);
-	post("[compose.js] Track name: " + trackName + " instrument: " + instrument + "\n");
+	log("debug", "Track name: " + trackName + " instrument: " + instrument + "\n");
 
 	// Get the track.
 	var trackData = {
@@ -367,7 +382,7 @@ function getTrackDataForIndex(trackIndex, startBeat, lengthBeats) {
 	};
 
 	for (var barIndex = 0; barIndex < 4; barIndex++) {
-		post("[compose.js] Getting bar data for track " + trackIndex + " bar " + barIndex + "\n");
+		log("debug", "Getting bar data for track " + trackIndex + " bar " + barIndex + "\n");
 
 
 		// Create empty bar data.
@@ -409,10 +424,8 @@ function getTrackDataForIndex(trackIndex, startBeat, lengthBeats) {
 				barData["notes"].push(noteData);
 			}
 
-
-
 			// Post how many notes were found.
-			post("[compose.js] Notes found: " + notes["notes"].length + "\n");
+			log("debug", "Notes found: " + notes["notes"].length + "\n");
 		}
 
 		// Add the bar data to the track data.
@@ -461,9 +474,9 @@ function getConfig(dict) {
 
 function postCommandResponse(result) {
 
-	post("[compose.js] Post command response received.\n");
+	log("debug", "Post command response received.\n");
 
-	post("Result: " + JSON.stringify(result) + "\n");
+	log("debug", "Result: " + JSON.stringify(result) + "\n");
 
 	// Handle errors.
 	if (result.result.error) {
@@ -480,15 +493,13 @@ function postCommandResponse(result) {
 		handleAddInstrumentResult(result, trackIndex, startBeat, lengthBeats);
 	}
 	else {
-		post("Unknown command name: " + commandName + "\n");
+		log("error", "Unknown command name: " + commandName + "\n");
 	}
 
 }
 
 function handleAddInstrumentResult(result, trackIndex, startBeat, lengthBeats) {
-	post("[compose.js] Handling addinstrument result.\n");
-
-	post("result", result.result);
+	log("debug", "Handling addinstrument result.\n");
 
 	// Get the track data from the result object. It is the last one.
 	var songData = result["result"]["song_data"];
@@ -497,21 +508,21 @@ function handleAddInstrumentResult(result, trackIndex, startBeat, lengthBeats) {
 
 	// Get the bars of the track.
 	var bars = track["bars"];
-	post("Bars: " + bars.length + "\n");
+	log("debug", "Bars: " + bars.length + "\n");
 
 	// Get the number of arrangement clips in the track.
 	var numberOfArrangementClipsInTrack = new LiveAPI("live_set tracks " + trackIndex).getcount("arrangement_clips");
-	post("Number of arrangement clips in track: " + numberOfArrangementClipsInTrack + "\n");
+	log("debug", "Number of arrangement clips in track: " + numberOfArrangementClipsInTrack + "\n");
 
 	// Go through the bars.
 	var insertionData = [];
 	for (var barIndex = 0; barIndex < bars.length; barIndex++) {
 		var barStartBeats = startBeat + barIndex * 4;
 		var barLengthBeats = 4;
-		post("Bar index: " + barIndex + " start: " + barStartBeats + " length: " + barLengthBeats + "\n");
+		log("debug", "Bar index: " + barIndex + " start: " + barStartBeats + " length: " + barLengthBeats + "\n");
 		var barData = bars[barIndex];
 		var barPositionInLoopBeats = barIndex * 4 + startBeat;
-		post("Bar position in loop: " + barPositionInLoopBeats + "\n");
+		log("debug", "Bar position in loop: " + barPositionInLoopBeats + "\n");
 
 		// Find the first clip that intersects with the bar.
 		var offsetInClipInBeats = startBeat + barIndex * 4;
@@ -526,19 +537,15 @@ function handleAddInstrumentResult(result, trackIndex, startBeat, lengthBeats) {
 				break;
 			}
 		}
-		post("Inserting bar into clip: " + clipIndex + " offset: " + offsetInClipInBeats + "\n");
+		log("debug", "Inserting bar into clip: " + clipIndex + " offset: " + offsetInClipInBeats + "\n");
 		insertionData.push([foundClipIndex, barData, offsetInClipInBeats, barIndex]);
-		//if (!inserted) {
-		//	post("No clip found for bar.\n");
-		//}
-
 	}
 
 	// Get the clip indices and make them unique.
 	var clipIndices = insertionData.map(function(value, index, arr) {
 		return value[0];
 	});
-	post("Clip indices: " + clipIndices + "\n");
+	log("debug", "Clip indices: " + clipIndices + "\n");
 
 	// Clear the clips. Only those that are not -1.
 	var nonEmptyClipIndices = clipIndices.filter(function(value, index, arr) {
@@ -554,12 +561,12 @@ function handleAddInstrumentResult(result, trackIndex, startBeat, lengthBeats) {
 		var offsetInClipInBeats = data[2];
 		var barIndex = data[3];
 		if (clipIndex == -1) {
-			post("No clip found for bar " + barIndex + " in track " + trackIndex + " offset: " + offsetInClipInBeats + "\n");
+			log("debug", "No clip found for bar " + barIndex + " in track " + trackIndex + " offset: " + offsetInClipInBeats + "\n");
 			clipIndex = createNewClip(trackIndex, offsetInClipInBeats);
 			offsetInClipInBeats = 0;
 			//continue;
 		}
-		post("Inserting bar into clip " + clipIndex + " in track " + trackIndex + " offset: " + offsetInClipInBeats + "\n");
+		log("debug", "Inserting bar into clip " + clipIndex + " in track " + trackIndex + " offset: " + offsetInClipInBeats + "\n");
 		insertBarIntoClip(barData, trackIndex, clipIndex, offsetInClipInBeats);
 	}
 }
@@ -568,11 +575,9 @@ function createNewClip(trackIndex, startBeats) {
 
     // Get the track.
     var track = new LiveAPI("live_set tracks " + trackIndex);
-	//post("Track: " + track + "\n");
 
     // Get the clip slots.
     var clipSlots = track.get("clip_slots");
-	//post("Clip slots: " + clipSlots + "\n");
 
     // Find the first empty clip slot.
     var emptyClipSlotIndex = -1;
@@ -584,10 +589,8 @@ function createNewClip(trackIndex, startBeats) {
             break;
         }
     }
-	//post("Empty clip slot index: " + emptyClipSlotIndex + "\n");
 
     // Create a new clip.
-    //post("Creating clip at index " + emptyClipSlotIndex + "\n");
     var clipSlot = new LiveAPI("live_set tracks " + trackIndex + " clip_slots " + emptyClipSlotIndex);
     clipSlot.call("create_clip", 4);
 
@@ -601,15 +604,13 @@ function createNewClip(trackIndex, startBeats) {
 
     // Get the index.
     var arrangementClipsCount = track.getcount("arrangement_clips");
-    //post("arrangementClipsCount: ", arrangementClipsCount, "\n");
 
-    // Find the clip index.
+	// Find the clip index.
     for (var i = 0; i < arrangementClipsCount; i++) {
         var clip = new LiveAPI("live_set tracks " + trackIndex + " arrangement_clips " + i);
         var clipStartBeats = clip.get("start_time");
-        //post("clipStartBeats: ", clipStartBeats, "\n");
         if (clipStartBeats == startBeats) {
-			post("Returning clip index: " + i + "\n");
+			log("debug", "Returning clip index: " + i + "\n");
             return i;
         }
     }
@@ -631,18 +632,17 @@ function clearClip(trackIndex, clipIndex) {
 
 
 function insertBarIntoClip(barData, trackIndex, clipIndex, offsetInClipInBeats) {
-	post("Inserting bar into track " + trackIndex + " clip " + clipIndex + " offset: " + offsetInClipInBeats + "\n");
+	log("debug", "Inserting bar into track " + trackIndex + " clip " + clipIndex + " offset: " + offsetInClipInBeats + "\n");
 
 	// Get the clip.
 	var clip = new LiveAPI("live_set tracks " + trackIndex + " arrangement_clips " + clipIndex);
 
 	var barIndex = offsetInClipInBeats / 4;
-	post("Bar index: " + barIndex + "\n");
+	log("debug", "Bar index: " + barIndex + "\n");
 
 	// Get the notes from the clip.
 	var notes = barDataToNotes(barIndex, barData);
 	clip.call("add_new_notes", notes);
-
 }
 
 
@@ -654,7 +654,7 @@ function barDataToNotes(barIndex, barData) {
 	}
 
 	var barOffset = barIndex * 32;
-	post("Bar offset: " + barOffset + "\n");
+	log("debug", "Bar offset: " + barOffset + "\n");
 
 	// The track data has a "notes" array. Iterate through the notes and add the notes to the notes object.
 	for (var i = 0; i < barData["notes"].length; i++) {
@@ -699,14 +699,8 @@ function getLoopInfoBeats() {
 }
 
 
-function logMessage(message) {
-	var messageLog = this.patcher.getnamed("messageLog");
-	messageLog.set(message);
-	post("[compose.js] " + message + "\n");
-}
-
 function displayMessage(message) {
-	post("[compose.js] " + message + "\n");
+	log("info", message + "\n");
 
 	var messageField = this.patcher.getnamed("messageField");
 
