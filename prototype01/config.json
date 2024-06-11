@@ -1,5 +1,7 @@
 {
 	"keyDELETE" : "value66asa6",
+    "apiUrlLocal": "http://127.0.0.1:5885/api/command",
+    "apiUrlRemote": "http://robot-uprising.eu:5885/api/command",
     "trackNamesDELETE": [
         "AI Drums",
         "AI Bass",

@@ -139,7 +139,7 @@ function executeAddInstrumentCommand() {
 
 function postCommand(command, callArguments) {
 
-    var url = "http://127.0.0.1:5885/api/command";
+	var url = getApiUrl();
 
     var xhr = new XMLHttpRequest();
     xhr.open("POST", url, true);
@@ -323,6 +323,25 @@ function getModel() {
 	var selectedModel = modelItems[selectedModelIndex * 2];
 	return selectedModel;
 }
+
+function getApiUrl() {
+
+	// There is a radio button group called "apiSource".
+	var apiSourceObject = this.patcher.getnamed("apiSource");
+
+	// Get the value of the radio button group.
+	var apiSource = apiSourceObject.getvalueof();
+
+	// Get the URL from the config.
+	if (apiSource == 0) {
+		var url = config["apiUrlRemote"];
+	}
+	else {
+		var url = config["apiUrlLocal"];
+	}
+	return url;
+}
+
 
 function getApiToken() {
 	var apiTokenObject = this.patcher.getnamed("apiTokenField");
