@@ -55,7 +55,7 @@ function executeAddInstrumentCommand() {
 	// Get all the AI tracks.
 	var aiTracksIndices = getAiTracksIndices();
 	if (aiTracksIndices.length == 0) {
-		log("error", "No AI tracks found.");
+		log("error", "No AI tracks found!.");
 		return;
 	}
     log("debug", "AI tracks found: " + aiTracksIndices + "\n");
@@ -172,7 +172,8 @@ function postCommand(command, callArguments) {
 function getAiTracksIndices() {
 
 	// Get the infix to identify AI tracks.
-	var infix = config.aiInstrumentInfix;
+	var infix = getConfig().aiInstrumentInfix;
+	post("Infix: " + infix + "\n");
 
 	// Get all tracks from the LiveAPI.
 	var liveSet = new LiveAPI("live_set");
@@ -184,6 +185,7 @@ function getAiTracksIndices() {
 	for (var i = 0; i < numTracks; i++) {
 		var track = new LiveAPI("live_set tracks " + i);
 		var trackName = track.get("name").toString();
+		post("Track name: " + trackName + "\n");
 		if (trackName.indexOf(infix) != -1) {
 			aiTracksIndices.push(i);
 		}
@@ -195,7 +197,13 @@ function getAiTracksIndices() {
 function getSelectedAiTrackIndices() {
 
 	// Get the infix to identify AI tracks.
-	var infix = config.aiInstrumentInfix;
+	var infix = getConfig().aiInstrumentInfix;
+
+	// If the infix is undefined, post an error message and return an empty array.
+	if (infix == null) {
+		log("error", "Infix is undefined.\n");
+		return [];
+	}
 
 	// Get the selected track.
 	var selectedTrack = new LiveAPI("live_set view selected_track");
@@ -233,7 +241,7 @@ function getTrackIndexFromId(trackId) {
 function executeClearAllCommand() {
 
 	// For each track, get the clips and delete them.
-	var trackNames = config["trackNames"];
+	var trackNames = getConfig()["trackNames"];
 	for (var i = 0; i < trackNames.length; i++) {
 		executeClearTrackCommand(trackNames[i]);
 	}
@@ -245,9 +253,9 @@ function executeClearTrackCommand(trackName) {
 
 	if (trackName == null) {
 		var selectedInstrument = this.patcher.getnamed("selectedInstrument").getvalueof();
-		var selectedInstrumentName = config["instruments"][selectedInstrument];
-		var selectedInstrumentMidi = config["instrumentsToMidi"][selectedInstrumentName];
-		trackName = config["midiToTrackNames"][selectedInstrumentMidi];
+		var selectedInstrumentName = getConfig()["instruments"][selectedInstrument];
+		var selectedInstrumentMidi = getConfig()["instrumentsToMidi"][selectedInstrumentName];
+		trackName = getConfig()["midiToTrackNames"][selectedInstrumentMidi];
 	}
 	log("debug", "Clearing track: " + trackName + "\n");
 
@@ -275,8 +283,8 @@ function executeClearTrackCommand(trackName) {
 
 function getSelectedInstrumentMidi() {
 
-	var instruments = config["instruments"];
-	var instrumentsToMidi = config["instrumentsToMidi"];
+	var instruments = getConfig()["instruments"];
+	var instrumentsToMidi = getConfig()["instrumentsToMidi"];
 
 	// Read the dropdown "selectedInstrument" from the Max patch.
     var selectedInstrument = this.patcher.getnamed("selectedInstrument").getvalueof();
@@ -334,10 +342,10 @@ function getApiUrl() {
 
 	// Get the URL from the config.
 	if (apiSource == 0) {
-		var url = config["apiUrlRemote"];
+		var url = getConfig()["apiUrlRemote"];
 	}
 	else {
-		var url = config["apiUrlLocal"];
+		var url = getConfig()["apiUrlLocal"];
 	}
 	return url;
 }
@@ -457,9 +465,9 @@ function getTrackDataForIndex(trackIndex, startBeat, lengthBeats) {
 
 
 function getInstrumentFromTrackName(trackName) {
-	var infix = config["aiInstrumentInfix"];
+	var infix = getConfig()["aiInstrumentInfix"];
 	var instrument = trackName.split(infix)[1];
-	var instrumentsToMidi = config["instrumentsToMidi"];
+	var instrumentsToMidi = getConfig()["instrumentsToMidi"];
 	instrument = instrumentsToMidi[instrument];
 	return instrument;
 }
