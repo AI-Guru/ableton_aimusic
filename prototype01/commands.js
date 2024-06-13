@@ -740,10 +740,37 @@ function handleFillUpResult(result, startBeat, lengthBeats) {
 	log("debug", "Total time creating clips: " + elapsedTimeTotalCreateClip + " s.\n");
 	log("debug", "Total time inserting bars: " + elapsedTimeTotalInsertBar + " s.\n");
 
-
 }
 
-function createNewClip(trackIndex, startBeats) {
+
+function getArrangementClipIndicesInLoop(trackIndex, startBeats, lengthBeats) {
+
+	// Get the number of arrangement clips in the track.
+	var numberOfArrangementClipsInTrack = new LiveAPI("live_set tracks " + trackIndex).getcount("arrangement_clips");
+	//log("debug", "Number of arrangement clips in track: " + numberOfArrangementClipsInTrack + "\n");
+
+	// Get the clip indices that are in the loop.
+	var clipIndices = [];
+	for (var clipIndex = 0; clipIndex < numberOfArrangementClipsInTrack; clipIndex++) {
+		var clip = new LiveAPI("live_set tracks " + trackIndex + " arrangement_clips " + clipIndex);
+		var clipStart = parseInt(clip.get("start_time"));
+		var clipLength = parseInt(clip.get("length"));
+		if (clipStart >= startBeats && clipStart + clipLength <= startBeats + lengthBeats) {
+			clipIndices.push(clipIndex);
+		}
+	}
+	//log("debug", "Clip indices in loop: " + clipIndices.length + "\n");
+
+	return clipIndices;
+}
+
+
+function createNewClip(trackIndex, startBeats, lengthBeats) {
+
+	// If lentghBeats is not defined, set it to 4.
+	if (lengthBeats == null) {
+		lengthBeats = 4;
+	}
 
     // Get the track.
     var track = new LiveAPI("live_set tracks " + trackIndex);
@@ -761,11 +788,12 @@ function createNewClip(trackIndex, startBeats) {
             break;
         }
     }
+	emptyClipSlotIndex = 1;
 
     // Create a new clip.
 	var startTime = new Date().getTime();
     var clipSlot = new LiveAPI("live_set tracks " + trackIndex + " clip_slots " + emptyClipSlotIndex);
-    clipSlot.call("create_clip", 4);
+    clipSlot.call("create_clip", lengthBeats);
 	var elapsedTime = new Date().getTime() - startTime;
 	elapsedTime = elapsedTime / 1000;
 	log("debug", "Creating clip took: " + elapsedTime + " s.\n");
@@ -773,9 +801,9 @@ function createNewClip(trackIndex, startBeats) {
     // Duplicate into arrangement view.
 	var startTime = new Date().getTime();
     var clipInClipSlot = clipSlot.get("clip");
-    var track = LiveAPI("live_set tracks " + trackIndex);
+    //var track = LiveAPI("live_set tracks " + trackIndex);
     track.call("duplicate_clip_to_arrangement", clipInClipSlot, startBeats);
-    clipSlot.call("delete_clip");
+    //clipSlot.call("delete_clip");
 	var elapsedTime = new Date().getTime() - startTime;
 	elapsedTime = elapsedTime / 1000;
 	log("debug", "Duplicating clip took: " + elapsedTime + " s.\n");
