@@ -2,7 +2,12 @@
 
 Thanks a lot for your interest in bridging the gap between Generative AI for music and Ableton Live! This release includes a very early prototype of an Ableton plugin (device). The fact you are reading this makes me super happy, because it shows that you are supporting my work. Thanks a lot!
 
+
 ## What is new in this release?
+
+- Due to popular demand you can generate MIDI files when using the Python API. Note this does not concern the Ableton functionality. The notebook shows how.
+
+
 
 
 
