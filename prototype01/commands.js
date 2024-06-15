@@ -28,6 +28,7 @@ function log(messageLogLevel, message) {
 // Execute the command.
 function executeCommand(commandName) {
 	log("debug", "Executing command: " + commandName + "\n");
+	disableUndo();
 	if (commandName == "addinstrument") {
 		executeAddInstrumentCommand();
 	}
@@ -43,6 +44,7 @@ function executeCommand(commandName) {
 	else {
 		log("error", "Unknown command: " + commandName + "\n");
 	}
+	enableUndo();
 }
 
 
@@ -98,6 +100,10 @@ function executeAddInstrumentCommand() {
 	var temperature = getTemperature();
 	log("debug", "Temperature: " + temperature + "\n");
 
+	// Get the density.
+	var density = getDensity();
+	log("debug", "Density: " + density + "\n");
+
 	// Get the selected model.
 	var model = getModel();
 	log("debug", "Model: " + model + "\n");
@@ -112,7 +118,7 @@ function executeAddInstrumentCommand() {
 	var parameters = {
 		"instrument": instrument,
 		"genre": genre,
-		"density": 4,
+		"density": density,
 		"temperature": temperature,
 		"model": model,
 		"harmonymode": "polyphone",
@@ -166,6 +172,10 @@ function executeFillUpCommand() {
 	var temperature = getTemperature();
 	log("debug", "Temperature: " + temperature + "\n");
 
+	// Get the density.
+	var density = getDensity();
+	log("debug", "Density: " + density + "\n");
+
 	// Get the selected model.
 	var model = getModel();
 	log("debug", "Model: " + model + "\n");
@@ -180,7 +190,7 @@ function executeFillUpCommand() {
 	// Create the command parameters.
 	var parameters = {
 		"genre": genre,
-		"density": 4,
+		"density": density,
 		"temperature": temperature,
 		"model": model,
 		"harmonymode": "polyphone",
@@ -385,6 +395,17 @@ function getTemperature() {
 	var temperature = temperatureSlider.getvalueof();
 
 	return parseFloat(temperature);
+}
+
+function getDensity() {
+
+	// Object is densitySlider.
+	var densitySlider = this.patcher.getnamed("densitySlider");
+
+	// Get the value of the slider.
+	var density = densitySlider.getvalueof();
+
+	return parseInt(density);
 }
 
 function getModel() {
@@ -740,6 +761,68 @@ function handleFillUpResult(result, startBeat, lengthBeats) {
 	log("debug", "Total time creating clips: " + elapsedTimeTotalCreateClip + " s.\n");
 	log("debug", "Total time inserting bars: " + elapsedTimeTotalInsertBar + " s.\n");
 
+
+}
+
+function handleFillUpResultOptimized(result, startBeat, lengthBeats) {
+
+	post("\n");
+	post("\n");
+
+	// Get the AI tracks.
+	var aiTracksIndices = getAiTracksIndices();
+	log("debug", "AI tracks: " + aiTracksIndices + "\n");
+	
+	// Go through all the AI tracks and make sure there is only one clip that starts at the start of the loop and is as long as the loop.
+	for (var i = 0; i < aiTracksIndices.length; i++) {
+		var trackIndex = aiTracksIndices[i];
+		ensureOneClipTrack(trackIndex, startBeat, lengthBeats);
+	}
+
+	// TODO Fill stuff.
+	// Use the original song_data, which should be in result.
+}
+
+function ensureOneClipTrack(trackIndex, startBeat, lengthBeats) {
+
+	// Get the track.
+	var track = new LiveAPI("live_set tracks " + trackIndex);
+
+	// Get the arrangement clip indices in the loop.
+	var clipIndices = getArrangementClipIndicesInLoop(trackIndex, startBeat, lengthBeats);
+	post("Track index: " + trackIndex + " clip indices: " + clipIndices + "\n");
+
+	// If there is one clip and it starts at the start of the loop and is as long as the loop, do nothing.
+	if (clipIndices.length == 1) {
+		var clipIndex = clipIndices[0];
+		var clip = new LiveAPI("live_set tracks " + trackIndex + " arrangement_clips " + clipIndex);
+		var clipStart = parseInt(clip.get("start_time"));
+		var clipLength = parseInt(clip.get("length"));
+		if (clipStart == startBeat && clipLength == lengthBeats) {
+			post("Clip is already correct.\n");
+			return;
+		}
+	}
+
+	// Delete all clips.
+	while (clipIndices.length > 0) {
+		var clipIndex = clipIndices.pop();
+		post("Deleting clip: " + clipIndex + "\n");
+		var clip = new LiveAPI("live_set tracks " + trackIndex + " arrangement_clips " + clipIndex);
+		post("Got clip.\n");
+		track.call("delete_clip", "id", clip.id);
+		clipsIndices = getArrangementClipIndicesInLoop(trackIndex, startBeat, lengthBeats);
+	}
+
+	// Create a new clip.
+	var clipIndex = createNewClip(trackIndex, startBeat, lengthBeats);
+
+	// Get the clip indices again. This time we should have only one clip.
+	var clipIndices = getArrangementClipIndicesInLoop(trackIndex, startBeat, lengthBeats);
+	if (clipIndices.length != 1) {
+		log("error", "More than one clip in loop. Got: " + clipIndices.length + "\n");
+		return;
+	}
 }
 
 
@@ -943,4 +1026,17 @@ function assert(condition, message) {
 	if (!condition) {
 		throw message;
 	}
+}
+
+
+function disableUndo() {
+	var app = new LiveAPI("live_app");
+    app.set("undo_step", 0);
+    post("Undo disabled\n");
+}
+
+function enableUndo() { 
+	var app = new LiveAPI("live_app");
+    app.set("undo_step", 1);
+    post("Undo enabled\n");
 }
