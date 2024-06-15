@@ -29,6 +29,7 @@ function log(messageLogLevel, message) {
 function executeCommand(commandName) {
 	log("debug", "Executing command: " + commandName + "\n");
 	disableUndo();
+	clearMessage();
 	if (commandName == "addinstrument") {
 		executeAddInstrumentCommand();
 	}
@@ -983,6 +984,14 @@ function getLoopInfoBeats() {
     var loopActive = liveSet.get("loop");
     var loopStartBeats = liveSet.get("loop_start");
     var loopLengthBeats = liveSet.get("loop_length");
+
+	// If any of the beats has a fraction, raise an error.
+	if (loopStartBeats % 1 != 0 || loopLengthBeats % 1 != 0) {
+		displayMessage("Use full bars.");
+		throw "Use full bars.";
+	}
+
+	// Return the loop info.
     return {
         loopActive: loopActive,
         loopStartBeats: parseInt(loopStartBeats),
@@ -993,34 +1002,19 @@ function getLoopInfoBeats() {
 
 function displayMessage(message) {
 	log("info", message + "\n");
-
 	var messageField = this.patcher.getnamed("messageField");
-
 	messageField.set("");
 	messageField.set(message);
 	return;
-
-
-	// Get the message field. It is a textedit object.
-
-	// Add message as a line.
-	var currentText = messageField.getvalueof();
-	var newText = currentText + message + "\n";
-
-	// Split into lines.
-	var lines = newText.split("\n");
-
-	// Only keep the last 10 lines.
-	var numLines = 6;
-	if (lines.length > numLines) {
-		lines = lines.slice(lines.length - numLines);
-	}
-
-
-	newText = lines.join("\n");
-	newText = newText.replace(/"/g, "");
-	messageField.set(newText);
 }
+
+
+function clearMessage() {
+	var messageField = this.patcher.getnamed("messageField");
+	messageField.set("");
+	return;
+}
+
 
 function assert(condition, message) {
 	if (!condition) {
@@ -1034,6 +1028,7 @@ function disableUndo() {
     app.set("undo_step", 0);
     post("Undo disabled\n");
 }
+
 
 function enableUndo() { 
 	var app = new LiveAPI("live_app");
