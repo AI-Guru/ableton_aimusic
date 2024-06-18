@@ -27,6 +27,7 @@ function log(messageLogLevel, message) {
 
 // Execute the command.
 function executeCommand(commandName) {
+
 	log("debug", "Executing command: " + commandName + "\n");
 	disableUndo();
 	clearMessage();
@@ -109,8 +110,13 @@ function executeAddInstrumentCommand() {
 	var model = getModel();
 	log("debug", "Model: " + model + "\n");
 
+	// Get the API token.
 	var apiToken = getApiToken();
 	log("debug", "API token: " + apiToken + "\n");
+
+	// Get the harmony mode.
+	var harmonyMode = getHarmonyMode();
+	log("debug", "Harmony mode: " + harmonyMode + "\n");
 
 	// Get the song data for the other instruments.
 	var songData = getSongDataFromTrackIndices(aiTracksNotSelected, startBeat, lengthBeats, true);
@@ -122,7 +128,7 @@ function executeAddInstrumentCommand() {
 		"density": density,
 		"temperature": temperature,
 		"model": model,
-		"harmonymode": "polyphone",
+		"harmonymode": harmonyMode,
 		"instrumentmode": "full",
 		"selectednotes": ["C", "C#/Db", "D", "D#/Eb", "E", "F", "F#/Gb", "G", "G#/Ab", "A", "A#/Bb", "B"],
 		"synthesize": false,
@@ -184,6 +190,10 @@ function executeFillUpCommand() {
 	var apiToken = getApiToken();
 	log("debug", "API token: " + apiToken + "\n");
 
+	// Get the harmony mode.
+	var harmonyMode = getHarmonyMode();
+	log("debug", "Harmony mode: " + harmonyMode + "\n");
+
 	// Get the song data for the instruments.
 	var songData = getSongDataFromTrackIndices(aiTracksIndices, startBeat, lengthBeats, false);
 	log("debug", "Song data ready.\n");
@@ -194,7 +204,7 @@ function executeFillUpCommand() {
 		"density": density,
 		"temperature": temperature,
 		"model": model,
-		"harmonymode": "polyphone",
+		"harmonymode": harmonyMode,
 		"instrumentmode": "full",
 		"selectednotes": ["C", "C#/Db", "D", "D#/Eb", "E", "F", "F#/Gb", "G", "G#/Ab", "A", "A#/Bb", "B"],
 		"synthesize": false,
@@ -422,10 +432,22 @@ function getModel() {
 	return selectedModel;
 }
 
+function getHarmonyMode() {
+	var object = this.patcher.getnamed("noteMode");
+
+	var selectedIndex = object.getvalueof();
+	if (selectedIndex == 0) {
+		return "polyphone";
+	}
+	else {
+		return "monophone";
+	}
+}
+
 function getApiUrl() {
 
 	// There is a radio button group called "apiSource".
-	var apiSourceObject = this.patcher.getnamed("apiSource");
+	var apiSourceObject = this.patcher.getnamed("apiMode");
 
 	// Get the value of the radio button group.
 	var apiSource = apiSourceObject.getvalueof();
