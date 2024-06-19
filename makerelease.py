@@ -35,7 +35,9 @@ def main():
         "compose.js",
         "config.json",
         "commands.js",
-        "device.amxd"
+        "device.amxd",
+        "fillup.js",
+        "background.png",
     ]
     target_folder = os.path.join(release_path, "abletondevice")
     copy_files(source_folder, file_list, target_folder)

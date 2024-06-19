@@ -25,6 +25,8 @@ function log(messageLogLevel, message) {
 	}
 }
 
+
+
 // Execute the command.
 function executeCommand(commandName) {
 
@@ -118,6 +120,10 @@ function executeAddInstrumentCommand() {
 	var harmonyMode = getHarmonyMode();
 	log("debug", "Harmony mode: " + harmonyMode + "\n");
 
+	// Get the notes.
+	var notes = getNotes();
+	log("debug", "Notes: " + notes + "\n");
+
 	// Get the song data for the other instruments.
 	var songData = getSongDataFromTrackIndices(aiTracksNotSelected, startBeat, lengthBeats, true);
 
@@ -130,7 +136,7 @@ function executeAddInstrumentCommand() {
 		"model": model,
 		"harmonymode": harmonyMode,
 		"instrumentmode": "full",
-		"selectednotes": ["C", "C#/Db", "D", "D#/Eb", "E", "F", "F#/Gb", "G", "G#/Ab", "A", "A#/Bb", "B"],
+		"selectednotes": notes,
 		"synthesize": false,
 	}
 
@@ -194,6 +200,10 @@ function executeFillUpCommand() {
 	var harmonyMode = getHarmonyMode();
 	log("debug", "Harmony mode: " + harmonyMode + "\n");
 
+	// Get the notes.
+	var notes = getNotes();
+	log("debug", "Notes: " + notes + "\n");
+
 	// Get the song data for the instruments.
 	var songData = getSongDataFromTrackIndices(aiTracksIndices, startBeat, lengthBeats, false);
 	log("debug", "Song data ready.\n");
@@ -206,7 +216,7 @@ function executeFillUpCommand() {
 		"model": model,
 		"harmonymode": harmonyMode,
 		"instrumentmode": "full",
-		"selectednotes": ["C", "C#/Db", "D", "D#/Eb", "E", "F", "F#/Gb", "G", "G#/Ab", "A", "A#/Bb", "B"],
+		"selectednotes": notes,
 		"synthesize": false,
 	}
 
@@ -456,8 +466,11 @@ function getApiUrl() {
 	if (apiSource == 0) {
 		var url = getConfig()["apiUrlRemote"];
 	}
-	else {
+	else if (apiSource == 1) {
 		var url = getConfig()["apiUrlLocal"];
+	}
+	else {
+		throw "Unknown API source.";
 	}
 	return url;
 }
@@ -469,6 +482,31 @@ function getApiToken() {
 	// Map to string.
 	apiToken = apiToken.toString();
 	return apiToken;
+}
+
+
+function getNotes() {
+
+	var liveSet = new LiveAPI("live_set");
+	var scaleMode = liveSet.get("scale_mode");
+	var allNotes = ["C", "C#/Db", "D", "D#/Eb", "E", "F", "F#/Gb", "G", "G#/Ab", "A", "A#/Bb", "B"];
+
+	if (scaleMode == 0) {
+		return allNotes;
+	}
+	else {
+		var rootNote = parseInt(liveSet.get("root_note"));
+		var scaleIntervals = liveSet.get("scale_intervals");
+		var scaleNotes = [];
+		for (var i = 0; i < scaleIntervals.length; i++) {
+			var scaleInterval = scaleIntervals[i];
+			var index = (rootNote + scaleInterval) % 12;
+			var note = allNotes[index];
+			scaleNotes.push(note);
+		}
+		return scaleNotes;
+	}
+
 }
 
 function getSongDataFromTrackIndices(trackIndices, startBeat, lengthBeats, ignoreEmptyTracks) {
