@@ -943,17 +943,10 @@ function createNewClip(trackIndex, startBeats, lengthBeats) {
 	log("debug", "Creating clip took: " + elapsedTime + " s.\n");
 
     // Duplicate into arrangement view.
-	var startTime = new Date().getTime();
     var clipInClipSlot = clipSlot.get("clip");
-    //var track = LiveAPI("live_set tracks " + trackIndex);
     track.call("duplicate_clip_to_arrangement", clipInClipSlot, startBeats);
-    //clipSlot.call("delete_clip");
-	var elapsedTime = new Date().getTime() - startTime;
-	elapsedTime = elapsedTime / 1000;
-	log("debug", "Duplicating clip took: " + elapsedTime + " s.\n");
 
 	// Find the clip index.
-    var startTime = new Date().getTime();
 	var arrangementClipsCount = track.getcount("arrangement_clips");
     var clipIndex = -1;
 	for (var i = 0; i < arrangementClipsCount; i++) {
@@ -964,9 +957,10 @@ function createNewClip(trackIndex, startBeats, lengthBeats) {
             clipIndex = i;
         }
     }
-	var elapsedTime = new Date().getTime() - startTime;
-	elapsedTime = elapsedTime / 1000;
-	log("debug", "Finding clip index took: " + elapsedTime + " s.\n");
+	if (clipIndex == -1) {
+		post("Error: Could not find clip index.\n");
+		throw "Could not find clip index.";
+	}
     return clipIndex;
 }
 
@@ -1084,14 +1078,14 @@ function assert(condition, message) {
 
 
 function disableUndo() {
-	var app = new LiveAPI("live_app");
-    app.set("undo_step", 0);
-    post("Undo disabled\n");
+	//var app = new LiveAPI("live_app");
+    //app.set("undo_step", 0);
+    //post("Undo disabled\n");
 }
 
 
 function enableUndo() { 
-	var app = new LiveAPI("live_app");
-    app.set("undo_step", 1);
-    post("Undo enabled\n");
+	//var app = new LiveAPI("live_app");
+    //app.set("undo_step", 1);
+    //post("Undo enabled\n");
 }
