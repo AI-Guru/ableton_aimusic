@@ -4,18 +4,17 @@ autowatch = 1;
 controlNoteStart = 29;
 controlNoteEnd = 36;
 
-function transpose(offset) {
-  executeCommand("transpose", offset);
-}
 
-function controls(pitch) {
-  executeCommand("controls", pitch);
-}
-
-function executeCommand(command, commandParameter) {
+function execute(command, commandParameter) {
   post("Command: " + command + " " + commandParameter + "\n");
 
+  // There is a checkbox in the UI that can be used to disable the script.
+  // It has the name ignoreControlEventsCheckbox.
+  // Get its value.
+  var object = this.patcher.getnamed("ignoreControlEventsCheckbox");
+  var ignoreControlEvents = parseInt(object.getvalueof()) == 1;
 
+  // Get the selected clips.
   var selectedClips = getSelectedClips();
   post("Selected clips: " + selectedClips + "\n");
 
@@ -42,26 +41,49 @@ function executeCommand(command, commandParameter) {
     // Use get_notes_extended to get all the notes of the clip.
     // This will return a list of notes, where each note is a dictionary.
     //var notes = clip.call("get_notes_extended", controlNoteEnd + 12, 128 - (controlNoteEnd + 12), localStartTime, localLength);
-    var notes = clip.call("get_notes_extended", controlNoteEnd + 12, 128 - (controlNoteEnd + 12), 0, 128);
-    notes = JSON.parse(notes);
-    notes = notes["notes"];
+    //var notes = clip.call("get_notes_extended", controlNoteEnd + 12, 128 - (controlNoteEnd + 12), 0, 1024);
+    //notes = JSON.parse(notes);
+    //notes = notes["notes"];
     //post("Notes: " + notes + "\n");
-    post("Notes: " + notes.length + "\n");
+    //post("Notes: " + notes.length + "\n");
 
+    var notes = null;
+
+    // Transpose.
     if (command == "transpose") {
+      notes = getNotesOfClip(selectedTrackIndex, selectedClipIndex, false);
       notes = transposeNotes(notes, commandParameter);
       clip.call("apply_note_modifications", {"notes": notes});
     }
+
+    // Apply controls.
     else if (command == "controls") {
 
       // Delete all the notes that are in the control range.
       clip.call("remove_notes_extended", controlNoteStart, controlNoteEnd - controlNoteStart, 0, 128);
 
       // Find the notes that should be added.
+      notes = getNotesOfClip(selectedTrackIndex, selectedClipIndex, false);
       var newNotes = applyControls(notes, commandParameter);
       post("New notes: " + newNotes.length + "\n");
       clip.call("add_new_notes", {"notes": newNotes});
     }
+
+    // Randomize velocity.
+    else if (command == "randomize") {
+      notes = getNotesOfClip(selectedTrackIndex, selectedClipIndex, ignoreControlEvents);
+      notes = randomizeVelocity(notes, commandParameter);
+      clip.call("apply_note_modifications", {"notes": notes});
+    }
+
+    // Groove.
+    else if (command == "groove") {
+      notes = getNotesOfClip(selectedTrackIndex, selectedClipIndex, ignoreControlEvents);
+      notes = grooveNotes(notes, commandParameter);
+      clip.call("apply_note_modifications", {"notes": notes});
+    }
+
+    // Unknown command.
     else {
       post("Unknown command: " + command + "\n");
     }
@@ -70,10 +92,33 @@ function executeCommand(command, commandParameter) {
 }
 
 
+function getNotesOfClip(trackIndex, clipIndex, ignoreControlEvents) {
+
+  // Get the clip start time and length.
+  var clip = new LiveAPI("live_set tracks " + trackIndex + " arrangement_clips " + clipIndex);
+  //var clipStartTime = parseInt(clip.get("start_time"));
+  //var clipLength = parseInt(clip.get("length"));
+
+  // Use get_notes_extended to get all the notes of the clip.
+  // This will return a list of notes, where each note is a dictionary.
+  var midiStart = 0;
+  var midiRange = 128;
+  if (ignoreControlEvents) {
+    midiStart = controlNoteEnd;
+    midiRange = 128 - controlNoteEnd;
+  }
+
+  var notes = clip.call("get_notes_extended", midiStart, midiRange, 0, 128);
+  notes = JSON.parse(notes);
+  notes = notes["notes"];
+  return notes;
+}
+
+
 function transposeNotes(notes, transposeAmount) {
   for (var i = 0; i < notes.length; i++) {
     var note = notes[i];
-    note["pitch"] = transposeAmount;
+    note["pitch"] += transposeAmount;
   }
   return notes;
 }
@@ -119,6 +164,38 @@ function applyControls(notes, pitch) {
   }
 
   return newNotes;
+}
+
+
+function randomizeVelocity(notes, velocityRange) {
+  var velocityDefault = 80;
+  var velocityMin = velocityDefault - velocityRange;
+  var velocityMax = velocityDefault + velocityRange;
+  for (var i = 0; i < notes.length; i++) {
+    var note = notes[i];
+    note["velocity"] = Math.floor(Math.random() * (velocityMax - velocityMin + 1)) + velocityMin;
+  }
+  return notes;
+}
+
+
+function grooveNotes(notes, grooveAmount) {
+  post("Grooving notes\n");
+
+  var minimumGrooveAmount = -grooveAmount;
+  var maximumGrooveAmount = grooveAmount;
+
+  for (var i = 0; i < notes.length; i++) {
+    var note = notes[i];
+    var noteStartTime = note["start_time"];
+    var randomGrooveAmount = Math.random() * (maximumGrooveAmount - minimumGrooveAmount) + minimumGrooveAmount;
+    post("Random groove amount: " + randomGrooveAmount + "\n");
+    var newNoteStartTime = Math.max(0, noteStartTime + randomGrooveAmount);
+    post("Old note start time: " + noteStartTime + " new note start time: " + newNoteStartTime + "\n");
+    note["start_time"] = newNoteStartTime;
+  }
+
+  return notes;
 }
 
 
