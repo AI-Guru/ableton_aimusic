@@ -7,9 +7,10 @@ Thanks a lot for your interest in bridging the gap between Generative AI for mus
 
 Here are videos that will get you started: 
 
-- TODO: First one
-- https://www.youtube.com/watch?v=wGk_atla6Gc
-- TODO: New one
+- Third release: https://www.youtube.com/watch?v=m1I_cDz9ZEI (new!)
+- Second release: https://www.youtube.com/watch?v=wGk_atla6Gc
+- First release: https://www.youtube.com/watch?v=wGk_atla6Gc
+- Entire playlist: https://youtube.com/playlist?list=PLOy6DpeZb6LH3m58PIe8XPlzpqHuCkIuy&si=8aoASYW9mOmOodLj
 
 You need an API token in order to run the plugin.
 
