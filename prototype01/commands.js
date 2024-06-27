@@ -7,6 +7,12 @@ config = getConfig();
 
 logLevel = "debug";
 
+
+function loadbang() {
+	clearMessage();
+	log("info", "Command.js loaded.\n");
+}
+
 function log(messageLogLevel, message) {
 	var allLogLevels = ["error", "warning", "info", "debug"];
 	if (allLogLevels.indexOf(messageLogLevel) == -1) {
