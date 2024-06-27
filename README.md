@@ -3,9 +3,25 @@
 Thanks a lot for your interest in bridging the gap between Generative AI for music and Ableton Live! This release includes a very early prototype of an Ableton plugin (device). The fact you are reading this makes me super happy, because it shows that you are supporting my work. Thanks a lot!
 
 
+## Installation and how-to
+
+Here are videos that will get you started: 
+
+- TODO: First one
+- https://www.youtube.com/watch?v=wGk_atla6Gc
+- TODO: New one
+
+You need an API token in order to run the plugin.
+
+
 ## Releases
 
-### Release 2 (this one)
+### Release 3 (this one)
+
+- I have added some stabilizations.
+- New feature: Use Ableton's scale mode to restrict the notes that are being generated. Note that this only enforces the notes, not the scale. Remember that A minor and C major have the same notes.
+
+### Release 2
 
 - Due to popular demand you can generate MIDI files when using the Python API. Note this does not concern the Ableton functionality. The notebook shows how.
 - There is a new button "Fill Up". Here you just have to enable some tracks for AI composition via the Toggle button and define a loop region. Fill up will will up empty spaces using a simple inpainting approach.
@@ -39,12 +55,6 @@ Things that I am already aware of:
 - There might be some performance issues when you use the plugin longer. I suspect Ableton's undo functionality to contribute to this.
 
 
-# Installation and how-to
-
-Here is a video that will get you started: https://www.youtube.com/watch?v=wGk_atla6Gc
-
-You need an API token in order to run the plugin.
-
-# Non Disclosure?
+## Non Disclosure?
 
 Feel free to talk about this plugin whenever you like, including posts on social media. Preferably positive ones 🤗 Please do not share your API token.
