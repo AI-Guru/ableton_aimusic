@@ -1,15 +1,4 @@
 {
     "outputfiles": [
-        {
-            "path": "composer.js",
-            "inputfiles": [
-                {
-                    "path": "../sharedcode/header.js"
-                },
-                {
-                    "path": "../sharedcode/test.js"
-                }
-            ]
-        }
     ]
 }
