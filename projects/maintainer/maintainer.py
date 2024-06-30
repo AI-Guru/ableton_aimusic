@@ -5,7 +5,67 @@ import json
 import os
 
 def maintain():
+    
+    # Start the main loop.
+    while True:
+       
+        # Load the state from all the maintain.json files in the project.
+        try:
+             # Load state.
+            state = load_state()
+            print(json.dumps(state, indent=4))
 
+            # Update if necessary.
+            update(state)
+
+        except Exception as e:
+            print(f"An error occurred: {e}")
+
+        time.sleep(1)
+        #break
+
+
+def update(state):
+    # For each output file, check if any of the input files have been modified.
+    # If so, merge all the input files into the output file.
+    for file in state.keys():
+
+        # This is an individual maintain.json file.
+        for output_file in state[file]["outputfiles"]:
+            output_file_path = output_file["path"]
+
+            # Check if any of the input files have been modified.
+            modified = False
+            for input_file in output_file["inputfiles"]:
+                input_file_path = input_file["path"]
+                input_file_last_modified = os.path.getmtime(input_file_path)
+                if input_file_last_modified > input_file["last_modified"]:
+                    modified = True
+                    input_file["last_modified"] = input_file_last_modified
+                    break
+
+            # Check if any input file is younger than the output file.
+            output_file_last_modified = os.path.getmtime(output_file_path)
+            for input_file in output_file["inputfiles"]:
+                input_file_path = input_file["path"]
+                input_file_last_modified = os.path.getmtime(input_file_path)
+                if input_file_last_modified > output_file_last_modified:
+                    modified = True
+                    break
+
+            # If any of the input files have been modified, merge them into the output file.
+            if modified:
+                print(f"Input files for {output_file_path} have been modified. Merging...")
+                with open(output_file_path, 'w') as output_file_handle:
+                    for input_file in output_file["inputfiles"]:
+                        with open(input_file["path"], 'r') as input_file_handle:
+                            output_file_handle.write("// Start of file: " + input_file["path"] + "\n\n")
+                            output_file_handle.write(input_file_handle.read())
+                            output_file_handle.write("\n\n// End of file: " + input_file["path"] + "\n\n")
+
+
+def load_state():
+    
     # Find all the occurences of the file "maintain.json" in the project. Use the cwd and go down recursively.
     # Make the paths absolute.
     files = glob.glob('**/maintain.json', recursive=True)
@@ -33,40 +93,7 @@ def maintain():
                     raise FileNotFoundError(f"Input file {input_file['path']} does not exist.")
                 input_file["last_modified"] = os.path.getmtime(input_file["path"])
 
-    # Start the main loop.
-    while True:
-
-        # For each output file, check if any of the input files have been modified.
-        # If so, merge all the input files into the output file.
-        for file in files:
-
-            # This is an individual maintain.json file.
-            for output_file in state[file]["outputfiles"]:
-                output_file_path = output_file["path"]
-
-                # Check if any of the input files have been modified.
-                modified = False
-                for input_file in output_file["inputfiles"]:
-                    input_file_path = input_file["path"]
-                    input_file_last_modified = os.path.getmtime(input_file_path)
-                    if input_file_last_modified > input_file["last_modified"]:
-                        modified = True
-                        input_file["last_modified"] = input_file_last_modified
-                        break
-
-                # If any of the input files have been modified, merge them into the output file.
-                if modified:
-                    print(f"Input files for {output_file_path} have been modified. Merging...")
-                    with open(output_file_path, 'w') as output_file_handle:
-                        for input_file in output_file["inputfiles"]:
-                            with open(input_file["path"], 'r') as input_file_handle:
-                                output_file_handle.write("// Start of file: " + input_file["path"] + "\n\n")
-                                output_file_handle.write(input_file_handle.read())
-                                output_file_handle.write("\n\n// End of file: " + input_file["path"] + "\n\n")
-
-
-        time.sleep(1)
-        #break
+    return state
 
 
 if __name__ == '__main__':
