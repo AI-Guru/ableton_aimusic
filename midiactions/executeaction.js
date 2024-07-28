@@ -83,6 +83,14 @@ function execute(command, commandParameter) {
       clip.call("apply_note_modifications", {"notes": notes});
     }
 
+    // Guitarize.
+    else if (command == "guitarize") {
+      post("Guitarizing\n");
+      notes = getNotesOfClip(selectedTrackIndex, selectedClipIndex, ignoreControlEvents);
+      notes = guitarizeNotes(notes);
+      clip.call("apply_note_modifications", {"notes": notes});
+    }
+
     // Unknown command.
     else {
       post("Unknown command: " + command + "\n");
@@ -181,10 +189,13 @@ function randomizeVelocity(notes, velocityRange) {
 
 function grooveNotes(notes, grooveAmount) {
   post("Grooving notes\n");
+  post("Grooving notes by " + grooveAmount + "\n");
 
+  // Find a good range for grooving.
   var minimumGrooveAmount = -grooveAmount;
   var maximumGrooveAmount = grooveAmount;
 
+  // Groove all the notes.
   for (var i = 0; i < notes.length; i++) {
     var note = notes[i];
     var noteStartTime = note["start_time"];
@@ -195,7 +206,217 @@ function grooveNotes(notes, grooveAmount) {
     note["start_time"] = newNoteStartTime;
   }
 
+  // Remove note overlap.
+  removeNoteOverlap(notes);
+
+  // Done.
   return notes;
+}
+
+function removeNoteOverlap(notes, epsilon) {
+
+  if (epsilon === undefined) {
+    epsilon = 0.0001;
+  }
+
+  // Raise an exception if notes is not an array.
+  if (!Array.isArray(notes)) {
+    throw "Notes is not an array";
+  }
+
+  // Raise an exception if epsilon is not a number.
+  if (typeof epsilon !== "number") {
+    throw "Epsilon is not a number";
+  }
+
+  // If two notes are overlapping - both have the same pitch and one note's end time is after another notes start time, shift the end time an epsilon before the star time.
+  for (var noteIndex1 = 0; noteIndex1 < notes.length; noteIndex1++) {
+    for (var noteIndex2 = noteIndex1 + 1; noteIndex2 < notes.length; noteIndex2++) {
+      var note1 = notes[noteIndex1];
+      var note2 = notes[noteIndex2];
+      if (note1["pitch"] == note2["pitch"] && note1["start_time"] + note1["duration"] > note2["start_time"]) {
+        note1["duration"] = note2["start_time"] - note1["start_time"] - epsilon;
+      }
+    }
+  }
+
+  return notes;
+}
+
+function guitarizeNotes(notes) {
+
+  // Raise an exception if notes is not an array.
+  if (!Array.isArray(notes)) {
+    throw "Notes is not an array";
+  }
+
+  // Print the first note.
+  post("First note: " + JSON.stringify(notes[0]) + "\n");
+
+  // Get the value of the umenu "menuResolution".
+  var resolution = getValueFromObject("menuResolution");
+  var resolutionValues = ["8th", "16th"];
+  if (resolutionValues.indexOf(resolution) == -1) {
+    throw "Invalid resolution: " + resolution;
+  }
+
+  // Get the time offset mean and variance. This is in percentage of the resolution.
+  var timeOffsetMean = getValueFromObject("dialTimeOffsetMean");
+  var timeOffsetVariance = getValueFromObject("dialTimeOffsetVariance");
+
+  // Get the velocity offset mean and variance for down strums. This is velocity.
+  var downOffsetMean = getValueFromObject("dialDownOffsetMean");
+  var downOffsetVariance = getValueFromObject("dialDownOffsetVariance");
+
+  // Get the velocity offset mean and variance for up strums. This is velocity.
+  var upOffsetMean = getValueFromObject("dialUpOffsetMean");
+  var upOffsetVariance = getValueFromObject("dialUpOffsetVariance");
+
+  // Print the values.
+  post("Resolution: " + resolution + "\n");
+  post("Time offset mean: " + timeOffsetMean + "\n");
+  post("Time offset variance: " + timeOffsetVariance + "\n");
+  post("Down offset mean: " + downOffsetMean + "\n");
+  post("Down offset variance: " + downOffsetVariance + "\n");
+  post("Up offset mean: " + upOffsetMean + "\n");
+  post("Up offset variance: " + upOffsetVariance + "\n");
+
+  // Compute the step size in beats.
+  var stepSize = 0.0;
+  if (resolution == "16th") {
+    stepSize = 0.25;
+  }
+  else if (resolution == "8th") {
+    stepSize = 0.5;
+  }
+
+  // Do the loop.
+  var currentStep = 0.0;
+  var nextStep = stepSize;
+  var newNotes = [];
+  var maxIterations = 100;
+  var currentIteration = 0;
+  while (newNotes.length < notes.length && maxIterations > 0) {
+
+    // Print the current step.
+    post("Current step: " + currentStep + " next step: " + nextStep + "\n");
+    post("New notes: " + newNotes.length + "/" + notes.length + "\n");
+
+    // Find all the notes where the start time is between the current step and the next step.
+    // Also make sure that the notes star times are closer to the current step than the next step.
+    var notesInRange = [];
+    for (var i = 0; i < notes.length; i++) {
+      var note = notes[i];
+      if (note["start_time"] >= currentStep && note["start_time"] < nextStep) {
+        var distanceToCurrentStep = Math.abs(note["start_time"] - currentStep);
+        var distanceToNextStep = Math.abs(note["start_time"] - nextStep);
+        if (distanceToCurrentStep < distanceToNextStep) {
+          notesInRange.push(note);
+        }
+      }
+    }
+    post("Notes in range: " + notesInRange.length + "\n");
+
+    // Determine if this is a down or up strum.
+    var downStrum = currentIteration % 2 == 0;
+
+    // Strum down. Sort the notes by pitch ascending.
+    var velocityMean = 0;
+    var velocityVariance = 0;
+    if (downStrum) {
+      post("Down strum\n");
+      notesInRange.sort(function(a, b) {
+        return a["pitch"] - b["pitch"];
+      });
+      velocityMean = downOffsetMean;
+      velocityVariance = downOffsetVariance;
+    }
+
+    // Strum up. Sort the notes by pitch descending.
+    else {
+      post("Up strum\n");
+      notesInRange.sort(function(a, b) {
+        return b["pitch"] - a["pitch"];
+      });
+      velocityMean = upOffsetMean;
+      velocityVariance = upOffsetVariance;
+    }
+
+    // Add the time offset and velocity offset.
+    var timeOffset = currentStep;
+    for (var i = 0; i < notesInRange.length; i++) {
+     
+      // Add the time offset. Sample from a normal distribution.
+      var sampledTimeOffset = sampleFromNormalDistribution(timeOffsetMean, timeOffsetVariance) * stepSize / 100.0;
+      post("Sampled time offset: " + sampledTimeOffset + "\n");
+      timeOffset += sampledTimeOffset;
+
+      // Add the velocity offset. Sample from a normal distribution.
+      var sampledVelocity = sampleFromNormalDistribution(velocityMean, velocityVariance);
+
+      post("Time offset: " + timeOffset + " velocity: " + sampledVelocity + "\n");
+
+      // Raise an exception if the time offset is nan.  
+      if (isNaN(timeOffset)) {
+        throw "Time offset is nan";
+      }
+
+      // Raise an exception if the velocity is nan.
+      if (isNaN(sampledVelocity)) {
+        throw "Velocity is nan";
+      }
+
+      // Update the note.
+      var note = notesInRange[i];
+      note["start_time"] = timeOffset;
+      note["velocity"] = sampledVelocity
+    }
+
+    // Add the notes to the new notes.
+    newNotes = newNotes.concat(notesInRange);
+
+    // Next round.
+    currentIteration++;
+    maxIterations--;
+    currentStep = nextStep;
+    nextStep = currentStep + stepSize;
+  }
+  if (maxIterations == 0) {
+    throw "Max iterations reached";
+  }
+
+  // Remove note overlap.
+  removeNoteOverlap(newNotes);
+
+  // Done.
+  return newNotes;
+}
+
+function getValueFromObject(objectName) {
+  var object = this.patcher.getnamed(objectName);
+  if (object == null) {
+    throw "Object not found: " + objectName;
+  }
+
+  // Check if it is a umenu.
+  if (object.maxclass == "umenu") {
+    var items = object.getattr("items");
+    var selectedIndex = object.getvalueof();
+    var selected = items[selectedIndex * 2];
+    return selected;
+  }
+
+  // Check if it is a live.dial.
+  else if (object.maxclass == "live.dial") {
+    var value = object.getvalueof();
+    value = parseFloat(value);
+    return value;
+  }
+
+  else {
+    throw "Object has unknown class: " + object.maxclass;
+  }
+
 }
 
 
@@ -248,3 +469,17 @@ function getTrackIndexFromId(trackId) {
 	}
 	return -1;
 }
+
+function sampleFromNormalDistribution(mean, variance) {
+  var u = 1 - Math.random();
+  var v = 1 - Math.random();
+  var z = Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+  var sample = mean + Math.sqrt(variance) * z;
+  if (isNaN(sample)) {
+    post("Mean: " + mean + " variance: " + variance + "\n");
+    post ("U: " + u + " V: " + v + " Z: " + z + "\n");
+    throw "Sample is nan";
+  }
+  return sample;
+}
+
